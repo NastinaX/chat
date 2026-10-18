@@ -131,7 +131,9 @@ In **Settings**, adjust the chat title, width, clock, battery, bubble color, ava
 
 **Apply to all chats** is enabled by default and shares the appearance across the current story, including new chats. Turn it off to style chats individually. Turning it back on copies the current chat's appearance to the others. Chat titles and group avatars stay separate; character names and avatars remain shared.
 
-<img width="250" height=auto alt="group-chat" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
+<p align="center">
+  <img width="250" height=auto alt="group-chat" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
+</p>
 
 ## Export images
 
