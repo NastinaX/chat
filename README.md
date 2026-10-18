@@ -1,5 +1,7 @@
 # Chat Story Generator
 
+[Open the app](https://nastinax.github.io/chat/)
+
 Create fictional, iMessage-style conversations with a live preview. Write a script, edit messages directly in the phone preview, and export a single image or an ordered set of screenshots.
 
 The app runs in your browser from a single HTML file. No build step or account is required.
