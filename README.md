@@ -8,8 +8,6 @@ The app runs in your browser from a single HTML file. No build step or account i
 
 <img width="1440" height="1000" alt="editor" src="https://github.com/user-attachments/assets/d3256bd1-376f-4669-9fbf-aa5b59b3267a" />
 
-![Script editor beside a live chat preview](docs/images/editor.png)
-
 ## Get started
 
 1. Download or clone this repository.
@@ -127,8 +125,6 @@ Open **Story blocks** in the Script tab to move or duplicate a whole block. In s
 
 <img width="1100" height="1136" alt="story-order" src="https://github.com/user-attachments/assets/cecc2619-13cf-4335-a165-53986525a375" />
 
-![Two conversations stacked in script order](docs/images/story-order.png)
-
 ## Customize the appearance
 
 In **Settings**, adjust the chat title, width, clock, battery, bubble color, avatars, phone frame, dark mode, and image cropping.
@@ -136,8 +132,6 @@ In **Settings**, adjust the chat title, width, clock, battery, bubble color, ava
 **Apply to all chats** is enabled by default and shares the appearance across the current story, including new chats. Turn it off to style chats individually. Turning it back on copies the current chat's appearance to the others. Chat titles and group avatars stay separate; character names and avatars remain shared.
 
 <img width="750" height="1624" alt="group-chat" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
-
-<img src="docs/images/group-chat.png" alt="Exported four-person group chat in dark mode" width="320">
 
 ## Export images
 
@@ -164,10 +158,5 @@ Editing buttons, character controls, and unsent preview text are excluded from t
 Saved stories belong to this browser and page address. They do not automatically sync between browsers or devices. Export JSON backups before clearing browser data or moving the app to a different address. Each backup contains one story, not the entire story library.
 
 ## Project files
-
-| File | Purpose |
-| --- | --- |
-| [`index.html`](index.html) | The complete app: interface, styles, script parser, browser storage, and exports. |
-| [`docs/images/`](docs/images/) | Screenshots and an exported example used in this README. |
 
 The app uses Tailwind CSS, Font Awesome, dom-to-image, and the Inter font through the external resources linked in `index.html`. No package installation or compilation is needed to run it. It can be served by a static web host.
