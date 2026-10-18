@@ -6,6 +6,8 @@ Create fictional, iMessage-style conversations with a live preview. Write a scri
 
 The app runs in your browser from a single HTML file. No build step or account is required.
 
+<img width="1440" height="1000" alt="editor" src="https://github.com/user-attachments/assets/d3256bd1-376f-4669-9fbf-aa5b59b3267a" />
+
 ![Script editor beside a live chat preview](docs/images/editor.png)
 
 ## Get started
@@ -123,6 +125,8 @@ Choose **Story order** in the Preview controls to stack chat blocks in the order
 
 Open **Story blocks** in the Script tab to move or duplicate a whole block. In story view, each block has its own input, so preview edits go into that part of the story.
 
+<img width="1100" height="1136" alt="story-order" src="https://github.com/user-attachments/assets/cecc2619-13cf-4335-a165-53986525a375" />
+
 ![Two conversations stacked in script order](docs/images/story-order.png)
 
 ## Customize the appearance
@@ -130,6 +134,8 @@ Open **Story blocks** in the Script tab to move or duplicate a whole block. In s
 In **Settings**, adjust the chat title, width, clock, battery, bubble color, avatars, phone frame, dark mode, and image cropping.
 
 **Apply to all chats** is enabled by default and shares the appearance across the current story, including new chats. Turn it off to style chats individually. Turning it back on copies the current chat's appearance to the others. Chat titles and group avatars stay separate; character names and avatars remain shared.
+
+<img width="750" height="1624" alt="group-chat" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
 
 <img src="docs/images/group-chat.png" alt="Exported four-person group chat in dark mode" width="320">
 
