@@ -11,7 +11,7 @@ Both apps are standalone HTML files. No account or build step is required.
 ## Get started
 
 1. Download or clone this repository and open [index.html](index.html) in a modern browser.
-2. Click **Load example** to explore private chats, groups, timestamps, and images.
+2. Click **Load example** to explore private chats, groups, timestamps, and images, or **Branching example** for an interactive story.
 3. Edit through **Messages**, **Script**, or the preview.
 
 The generator loads Tailwind CSS, Font Awesome, Inter, and dom-to-image from CDNs, so it needs an internet connection. The [player](player.html) works offline with embedded images; external image URLs still need their host.
@@ -105,6 +105,46 @@ Quote names containing `/`, brackets, or colons:
 
 **Apply script replaces messages in the chats it lists.** Other chats remain. Without headers, it updates the selected chat. Syntax errors leave existing chats intact.
 
+### Choices and branching
+
+Named scenes add interactive replies and alternate paths. A scene can contain several chat blocks and ends with a choice, a jump, or an ending:
+
+```text
+[Scene: invitation]
+[Chat: User / Sarah]
+[Phone owner: User]
+Sarah: Can you meet me tonight?
+
+[Choice]
+"Yes. Where?" -> meet
+"Sorry, I can't." -> stay_home
+[End choice]
+
+[Scene: meet]
+[Chat: User / Sarah]
+Sarah: At the station. Eight o'clock.
+[Go to: later]
+
+[Scene: stay_home]
+[Chat: User / Sarah]
+Sarah: Okay. Keep your phone nearby.
+[Go to: later]
+
+[Scene: later]
+[Chat: User / Max]
+[Phone owner: User]
+Max: Did you hear from Sarah?
+[End]
+```
+
+Scene names start with a letter and contain letters, digits, `_`, or `-`. Destinations must exist. A choice needs a chat first and at least two quoted replies; it belongs to the last chat in that scene. Each reply becomes a message from that chat's phone owner, so do not repeat it as a `User:` line.
+
+In the player, choose a reply and press **Send** to follow its path. Branches can rejoin a shared scene while keeping the history actually played. Return to an earlier choice in the timeline to choose again; later decisions and messages are cleared.
+
+In **Story order**, use **Story path** to select replies. PNG exports and earlier-message context follow that path, including its chosen replies. These generated reply bubbles are read-only; change their text in the script. Player exports contain the whole story graph. Scenes and choices survive preview edits, Undo, autosave, and JSON backups.
+
+Scripts without scenes keep their existing linear behavior. Loops, variables, and conditional choices are not supported yet.
+
 ## Preview and appearance
 
 **Story order** is the default view. It stacks blocks in script order, including separate blocks for later visits to a chat. **Current chat** shows one conversation together. Preview and export preferences are saved with each story.
@@ -155,16 +195,16 @@ Status progression follows the latest new message visible in each image. Repeate
 ## Play a story
 
 1. Apply script edits, then choose **Preview → Export → Player (JSON)**.
-2. Open [player.html](player.html), click **Open story**, and select the `.chatstory.json` file. **Try example** loads a demo.
+2. Open [player.html](player.html), click **Open story**, and select the `.chatstory.json` file. **Try example** loads a linear demo; **Try branching** demonstrates reply choices.
 3. Incoming messages arrive after a typing delay. Click **Send** or press **Enter** for the owner's scripted replies.
 
 The player opens with just the phone. **Controls** at the top-right contains pause, speed, restart, chats, timeline, and file options. Switching browser tabs pauses playback until you return.
 
 The phone's **back arrow** shows chats reached so far, recent messages, and unread counts. **As …** identifies the phone owner. A new chat starting with an incoming message shows a notification at the top of the phone; open it or its unread chat to continue. Chats starting with the owner's message open automatically. Returning chats retain their history and show a New messages divider.
 
-**Controls → Timeline** opens a story map beside the phone, or below it on small screens. Scroll to zoom at the cursor and drag to pan. Zooming out turns messages into dots, then compact chat lines. Click a message to jump; click a compact chat to zoom into it. **Now** follows playback; the percentage resets zoom. Arrow keys, Home/End, and Enter support navigation.
+**Controls → Timeline** opens a story map beside the phone, or below it on small screens. Scroll to zoom at the cursor and drag to pan. Zooming out turns messages into dots, then compact chat lines. Below 8%, only choices and small beginning/end markers remain, with the current position shown as a dot. Forks and joins stay connected. Click a message or a reached choice to jump; click a compact chat to zoom into it. **Now** follows playback; the percentage resets zoom. Arrow keys, Home/End, and Enter support navigation; in the choices overview, arrows skip between choices and endpoints.
 
-Jumping rebuilds chat history and section status through that moment, clearing later notifications. A manual pause is preserved. Playback is linear; choices and branching remain future work. See the [player format](docs/player-format.md) for technical details.
+Jumping rebuilds chat history and section status through that moment, clearing later notifications. A manual pause is preserved. Branching stories show their forks and merges; only the chosen route contributes to chat history. See the [player format](docs/player-format.md) for technical details.
 
 Player files contain applied story content, excluding drafts and undo history. They cannot be imported into the generator. Files stay in the browser session and are not uploaded; reopen them after reloading.
 
@@ -185,6 +225,7 @@ Changes autosave in this browser using IndexedDB; the status appears below the a
 | [docs/player-format.md](docs/player-format.md) | Versioned playback format. |
 | [tests/test_generator_export.py](tests/test_generator_export.py) | Browser checks for preview settings, PNG layout, pagination, images, and ZIPs. |
 | [tests/test_player_timeline.py](tests/test_player_timeline.py) | Offline browser checks for playback, navigation, and seeking. |
+| [tests/test_branching.py](tests/test_branching.py) | Scene syntax, branch preview/export, choices, and path history. |
 
 Both apps can run on a static host. Optional regression checks require Python, Playwright, and Chromium:
 

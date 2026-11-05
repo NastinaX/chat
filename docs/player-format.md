@@ -1,4 +1,4 @@
-# Chat Story Player format, version 1
+# Chat Story Player format
 
 The generator's **Player (JSON)** command writes a `<story-name>.chatstory.json` file for [`player.html`](../player.html), separate from editable story backups.
 
@@ -9,7 +9,7 @@ Apply script edits before exporting. Drafts, composer text, undo history, browse
 | Field | Meaning |
 | --- | --- |
 | `format` | Exactly `"chat-story-player"`. |
-| `version` | Exactly `1`. Unknown versions are rejected. |
+| `version` | `1` for linear stories; `2` also supports choices. Unknown versions are rejected. |
 | `story` | An object with nonempty string `id` and `title` fields. |
 | `characters` | Characters with unique string `id`, display `name`, and nullable image-source `avatar`. |
 | `chats` | Chat definitions, including participants, phone owner, and appearance. |
@@ -92,6 +92,24 @@ The player keeps chat navigation separate from the graph. Its back arrow lists r
 
 Ends playback. An end node has no `next` field. Chat and message nodes require `next`, containing either another node's ID or `null`; `null` also ends the path.
 
+### Choice (version 2)
+
+```json
+{
+  "id": "choice:invitation",
+  "type": "choice",
+  "chatId": "chat-1",
+  "options": [
+    { "id": "yes", "text": "Yes. Where?", "next": "reply:yes" },
+    { "id": "no", "text": "Sorry, I can't.", "next": "reply:no" }
+  ]
+}
+```
+
+A choice has at least two distinct options and no `next` field. Option IDs must be unique within the choice; text is a nonempty reply label and `next` names an existing node. Playback waits at an unresolved choice. Selecting an option prepares its reply; **Send** posts the reply and follows the branch.
+
+Each option must point directly to a text message in the same chat, sent by its phone owner, with content matching the option's text. The generator creates these reply messages and links them to their destination scenes. Scene names are authoring labels; the player follows node IDs. Version 1 files cannot contain choices.
+
 ## Minimal complete example
 
 ```json
@@ -135,7 +153,7 @@ Ends playback. An end node has no `next` field. Chat and message nodes require `
 
 ## Validation and media
 
-References must resolve to existing characters, chats, and nodes. The start path must contain at least one message. Cycles are rejected, including cycles in unreachable nodes. Unreachable nodes are validated but are not played. Generator exports form one finite chain in script order and finish with an end node.
+References must resolve to existing characters, chats, and nodes. A reachable path must contain playable messages. Cycles are rejected across every edge, including unreachable nodes and choice alternatives. Unreachable nodes are validated but are not played. Linear generator exports form one chain; branching exports include every authored alternative and explicit joins.
 
 The player accepts supported image data URLs, including SVG, or HTTP(S) image URLs. It renders them through image elements and never inserts their contents as HTML. Export resolves editor `local:` cache references and embeds browser blob images, so those temporary references do not appear in a player file. External URLs still require a connection and an available host.
 
@@ -143,16 +161,14 @@ Invalid imports show an error and keep the currently loaded story intact. Editor
 
 ## Timeline and seeking
 
-The timeline traces the current route from `startNodeId` through explicit links. It excludes unreachable nodes, supports repeated visits to a chat, and targets **node IDs**, with `null` representing the beginning. Card indices are only a UI mapping onto that route; they are not saved story identities.
+Playback traces a route from `startNodeId` through explicit links and recorded choice selections, stopping at unresolved choices. The timeline displays the reachable graph, including forks and merges, while marking the chosen route. Targets use **node IDs**, with `null` representing the beginning; card indices are only a UI mapping.
 
-The map uses cards at 70% zoom and above, dots from 25%, and compact chat visits below 25%. Compact visits show labeled segments, message counts, and endpoints. Clicking a segment zooms into it without seeking; cards, dots, and endpoints seek. See the [README](../README.md#play-a-story) for controls.
+The map uses cards at 70% zoom and above, dots from 25%, compact chat visits from 8%, and a choices overview below 8%. Compact visits show labeled segments, message counts, and endpoints. The overview contracts message runs into links between choices, joins, and endpoints, preserving separate alternative edges and the current-position marker. Scale and spacing continue shrinking down to 2%; intermediate ranks remain ordered for cursor anchoring. Clicking a segment zooms into it without seeking; cards, dots, and reached choices seek. See the [README](../README.md#play-a-story) for controls.
 
-`PlaybackEngine.seekTo(nodeId)` validates the target before resetting session state, then replays the route prefix through that node. The selected message is revealed; the next node remains the next playback step. The controller cancels pending timers and rebuilds chat activity, clears unread notifications and scroll positions, and opens the selected conversation. Story content is unchanged. Seeking preserves a manual pause; seeking backward from a completed story continues playback.
+`PlaybackEngine.seekTo(nodeId)` validates the target before rebuilding session state through that moment. It restores only the selected route's messages, chat activity, section status, and decisions. Seeking back to a choice clears its selection and subsequent decisions, allowing another route. The controller cancels pending timers and clears later notifications and scroll positions. Seeking preserves a manual pause; seeking backward from a completed story continues playback.
 
 Route resolution is shared by playback and seeking. `layoutTimelineGraph` accepts moments and outgoing connections keyed by node ID, separately from the playback route. It assigns topological levels, separates forks into lanes, and places merges below their parents. It rejects missing targets and loops. `groupTimelineVisits` groups only uninterrupted message chains in one chat: returns, choice nodes, forks, and merges remain separate. `projectTimeline` maps this logical model into the current detail level, keeping branch labels apart. Zoom anchoring interpolates between the same logical ranks across detail changes. Padding around the map allows cursor anchoring even when the story is smaller than the viewport. The renderer only mounts points and links near the visible viewport.
 
-## Future choices and storylines
+## Compatibility and extensions
 
-Version 1 supports linear playback only and rejects unknown node types, including `choice`. Choices, variables, and conditions require a new format version and player support.
-
-The timeline layout already accepts multiple outgoing links. Future playback and seeking must track selected edges, replay decisions before a seek target, discard later state, and keep mutually exclusive histories separate.
+The player continues to accept version 1 linear stories. Version 2 adds explicit choices without changing chat or message records. Mutually exclusive paths keep separate histories, including after they merge. Variables, conditions, loops, and persistent game saves remain future extensions.

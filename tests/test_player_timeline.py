@@ -496,6 +496,25 @@ class PlayerTimelineTests(unittest.TestCase):
         self.assertEqual(result, {"segments": [["root"], ["left", "left-end"], ["right", "right-end"], ["merge"]],
                                   "labelsApart": True, "choice": "label", "mergeBelow": True})
 
+    def test_compact_map_keeps_shrinking_and_choices_overview_collapses_long_runs(self):
+        self.load_long_chat()
+        result = self.page.evaluate("""() => {
+            const model=buildTimelineModel(engine),levels=[.24,.15,.1,.08,.06,.04,.02];
+            const views=levels.map(zoom=>projectTimeline(model,zoom));
+            const overview=views.at(-1);
+            return {heights:views.map(view=>view.height),
+                details:views.map(view=>view.detail),links:overview.edges.length,
+                visible:overview.moments.filter(moment=>moment.display!=='hidden').map(moment=>moment.source.kind),
+                increasing:views.every(view=>view.ys.every((y,index)=>!index||y>view.ys[index-1])),
+                cardWidth:projectTimeline(model,1).moments.find(moment=>moment.source.kind==='text').w};
+        }""")
+        self.assertTrue(all(first > second for first, second in zip(result['heights'], result['heights'][1:])))
+        self.assertEqual(result['details'], ['chats'] * 4 + ['choices'] * 3)
+        self.assertEqual(result['links'], 1)
+        self.assertEqual(result['visible'], ['start', 'text'])
+        self.assertTrue(result['increasing'])
+        self.assertLessEqual(result['cardWidth'], 180)
+
     def test_wheel_over_phone_still_scrolls_without_zooming_timeline(self):
         self.load_long_chat()
         self.open_timeline()

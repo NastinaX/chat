@@ -399,6 +399,7 @@
             <select id="project-select" onchange="switchProject(this.value)" class="w-full min-w-0 p-2 border rounded text-sm"></select>
             <button onclick="openProjectDialog('new')" class="px-3 py-1 border rounded text-sm">New story</button>
             <button onclick="loadExampleProject()" class="px-3 py-1 border rounded text-sm">Load example</button>
+            <button id="load-branching-example" onclick="loadBranchingExampleProject()" class="px-3 py-1 border rounded text-sm">Branching example</button>
             <button onclick="openProjectDialog('rename')" class="px-3 py-1 border rounded text-sm">Rename</button>
             <button id="delete-project" onclick="deleteProject()" class="px-3 py-1 border border-red-200 text-red-700 hover:bg-red-50 rounded text-sm">Delete story</button>
             <div class="flex gap-2">
@@ -545,6 +546,7 @@ Sarah: Hello!</pre>
                         <p>Repeat a header to revisit a chat. Only listed chats change; without headers, edits apply to the current chat.</p>
                         <p><code>Time: 9:41 AM</code> adds a timestamp. <code>[img:Beach photo]</code> adds an image description.</p>
                         <p>Indent newlines by two spaces. Quote names containing <code>/</code> or brackets.</p>
+                        <p>Branch with <code>[Scene: name]</code>, <code>[Choice]</code>, quoted replies such as <code>"Yes" -&gt; meet</code>, and <code>[End choice]</code>. Finish each scene with a choice, <code>[Go to: name]</code>, or <code>[End]</code>. Try <b>Branching example</b> above.</p>
                     </div>
                 </details>
                 
@@ -693,6 +695,10 @@ Sarah: Hello!</pre>
             <label id="story-context-control" class="hidden flex items-start gap-2 text-xs text-gray-600 mt-3" title="Fill spare screenshot space with earlier messages when returning to a chat.">
                 <input id="preview-story-context" type="checkbox" checked onchange="setStoryContext(this.checked)">Earlier messages
             </label>
+            <div id="preview-path-controls" class="hidden mt-3 pt-3 border-t border-gray-100 space-y-2">
+                <p class="text-xs font-medium text-gray-700">Story path</p>
+                <div id="preview-path-choices" class="space-y-2"></div>
+            </div>
             <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mt-3">
                 <input id="preview-direct-editing" type="checkbox" checked onchange="setDirectEditing(this.checked)" aria-describedby="preview-editing-help">Edit in preview
             </label>
@@ -1052,6 +1058,8 @@ Sarah: Hello!</pre>
         let conversations = [];
         let activeConversationId = null;
         let storyBlocks = [];
+        let storyFlow = null;
+        let previewChoices = {};
         let previewMode = 'story';
         let storyContext = true;
         let directEditing = true;
@@ -1093,6 +1101,7 @@ Sarah: Hello!</pre>
                     offset += count;
                 });
             });
+            synchronizeStoryFlow();
         }
 
 
@@ -1394,6 +1403,8 @@ Sarah: Hello!</pre>
                 if (snapshot.projectName) projectName = snapshot.projectName;
                 characters = snapshot.characters; conversations = snapshot.conversations;
                 storyBlocks = snapshot.storyBlocks; previewMode = snapshot.previewMode ?? 'story'; storyContext = snapshot.storyContext ?? true;
+                storyFlow = snapshot.flow || null;
+                previewChoices = normalizePreviewChoices(storyFlow, snapshot.previewChoices);
                 directEditing = snapshot.directEditing ?? true;
                 shareAppearance = snapshot.shareAppearance;
                 sharedAppearance = { ...snapshot.sharedAppearance };
@@ -1439,6 +1450,7 @@ Sarah: Hello!</pre>
 
         function blankProjectSnapshot(name = 'Untitled story') {
             return { version: 2, projectName: name, characters: [], conversations: [], activeConversationId: null,
+                flow: null, previewChoices: {},
                 directEditing: true,
                 shareAppearance: true, sharedAppearance: sharedAppearanceFrom(),
                 storyBlocks: [], previewMode: 'story', storyContext: true, scriptDraft: null, exportOptions: exportOptionsWithDefaults() };
@@ -1504,6 +1516,42 @@ Sarah: Hello!</pre>
             ]);
             snapshot.activeConversationId = snapshot.conversations[0].id;
             snapshot.previewMode = 'story';
+            return snapshot;
+        }
+
+        function branchingProjectSnapshot(name = 'Branching example') {
+            const snapshot = blankProjectSnapshot(name);
+            snapshot.version = 3;
+            snapshot.characters = ['User', 'Sarah', 'Max'].map(name => ({ id: `character_${name.toLowerCase()}`, name, avatar: null }));
+            snapshot.conversations = ['sarah', 'max'].map(person => ({
+                id: `chat_user_${person}`, participantIds: ['character_user', `character_${person}`], ownerId: 'character_user',
+                settings: { ...DEFAULT_SETTINGS }, imageCache: {}, composer: {}, messages: []
+            }));
+            const sceneBlock = (scene, person, records, status = null) => {
+                const chat = snapshot.conversations.find(chat => chat.id === `chat_user_${person}`);
+                const messages = records.map(([sender, content, type = 'text'], index) => ({
+                    id: `branch_${scene}_${index + 1}`, sender: sender === null ? null : `character_${sender}`,
+                    type, content, timestamp: 'Now', altText: ''
+                }));
+                chat.messages.push(...messages);
+                const block = { id: `branch_block_${scene}`, conversationId: chat.id, messageIds: messages.map(message => message.id), ...(status ? { status } : {}) };
+                snapshot.storyBlocks.push(block);
+                return block.id;
+            };
+            const invitation = sceneBlock('invitation', 'sarah', [[null, 'Friday evening', 'timestamp'], ['sarah', 'Can you meet me tonight?']]);
+            const meet = sceneBlock('meet', 'sarah', [['sarah', "At the station. Eight o'clock."], ['sarah', "I'll bring the tickets."]], { time: '20:00', battery: 80 });
+            const stay = sceneBlock('stay_home', 'sarah', [['sarah', 'Okay. Keep your phone nearby.'], ['sarah', "I'll text you later."]], { time: '20:00', battery: 90 });
+            const later = sceneBlock('later', 'max', [['max', 'Did you hear from Sarah?'], ['user', "Yes. I'll keep you posted."]]);
+            snapshot.flow = { start: 'invitation', scenes: [
+                { id: 'invitation', blockIds: [invitation], exit: { type: 'choice', id: 'choice:invitation', chatId: 'chat_user_sarah', options: [
+                    { id: 'meet_reply', text: 'Yes. Where?', target: 'meet' },
+                    { id: 'stay_reply', text: "Sorry, I can't.", target: 'stay_home' }
+                ] } },
+                { id: 'meet', blockIds: [meet], exit: { type: 'goto', target: 'later' } },
+                { id: 'stay_home', blockIds: [stay], exit: { type: 'goto', target: 'later' } },
+                { id: 'later', blockIds: [later], exit: { type: 'end' } }
+            ] };
+            snapshot.activeConversationId = snapshot.conversations[0].id;
             return snapshot;
         }
 
@@ -1611,7 +1659,7 @@ Sarah: Hello!</pre>
         async function createNamedProject(name, example = false) {
             return runProjectOperation(async () => {
                 name = validateProjectName(name);
-                const snapshot = example ? exampleProjectSnapshot(name) : blankProjectSnapshot(name);
+                const snapshot = example === 'branching' ? branchingProjectSnapshot(name) : example ? exampleProjectSnapshot(name) : blankProjectSnapshot(name);
                 const next = validateBackup(snapshot), id = 'project_' + generateUniqueId();
                 const entries = [...projectLibrary, { id, name }];
                 await autosaveRequest('readwrite', store => {
@@ -1624,6 +1672,8 @@ Sarah: Hello!</pre>
         }
 
         async function loadExampleProject() { return createNamedProject(uniqueProjectName('Example story'), true); }
+
+        async function loadBranchingExampleProject() { return createNamedProject(uniqueProjectName('Branching example'), 'branching'); }
 
         async function switchProject(id) {
             if (id === currentProjectId) return true;
@@ -2718,7 +2768,7 @@ Sarah: Hello!</pre>
         function populateScriptFromMessages() {
             saveActiveConversation();
             synchronizeStoryBlocks();
-            const blocks = storyBlocks.map(block => {
+            const serializeBlock = block => {
                 const chat = conversations.find(item => item.id === block.conversationId);
                 const byId = new Map(chat.messages.map(message => [message.id, message]));
                 const records = block.messageIds.map(id => byId.get(id)).map(msg => {
@@ -2728,8 +2778,20 @@ Sarah: Hello!</pre>
                     return `${scriptName(characterName(msg.sender))}: ${content}`;
                 });
                 return `[Chat: ${chat.participantIds.map(id => scriptName(characterName(id))).join(' / ')}]\n[Phone owner: ${scriptName(characterName(chat.ownerId))}]\n` + records.map(record => record.replace(/\n/g, '\n  ')).join('\n');
-            });
-            document.getElementById('script-input').value = blocks.join('\n\n');
+            };
+            let sections;
+            if (storyFlow) {
+                const byId = new Map(storyBlocks.map(block => [block.id, block]));
+                const orderedScenes = [storyFlow.scenes.find(scene => scene.id === storyFlow.start), ...storyFlow.scenes.filter(scene => scene.id !== storyFlow.start)];
+                sections = orderedScenes.map(scene => {
+                    const lines = [`[Scene: ${scene.id}]`, ...scene.blockIds.map(id => serializeBlock(byId.get(id)))];
+                    const exit = scene.exit;
+                    if (exit.type === 'choice') lines.push('[Choice]\n' + exit.options.map(option => `${JSON.stringify(option.text)} -> ${option.target}`).join('\n') + '\n[End choice]');
+                    else lines.push(exit.type === 'goto' ? `[Go to: ${exit.target}]` : '[End]');
+                    return lines.join('\n\n');
+                });
+            } else sections = storyBlocks.map(serializeBlock);
+            document.getElementById('script-input').value = sections.join('\n\n');
         }
 
         function setSender(sender) {
@@ -3033,6 +3095,9 @@ Sarah: Hello!</pre>
 
             if (insertionTarget && messages.some(message => message.id === insertionTarget.anchorId)) {
                 insertRelativeMessage(insertionTarget.anchorId, newMsg, insertionTarget.position);
+            } else if (storyFlow) {
+                placePreviewMessage(activeConversation(), newMsg);
+                messages = activeConversation().messages;
             } else messages.push(newMsg);
             insertionTarget = null;
             renderChat({ followNewMessage: true });
@@ -3055,6 +3120,10 @@ Sarah: Hello!</pre>
         }
 
         function scrollToMessage(id) {
+            if (storyFlow) {
+                const block = storyBlocks.find(block => block.conversationId === activeConversationId && block.messageIds.includes(id));
+                if (block && !selectPathToBlock(block.id)) return showToast('This scene is not linked from the start.');
+            }
             const el = previewMode === 'story'
                 ? Array.from(document.querySelectorAll('#story-preview [data-message-id]')).find(message =>
                     message.dataset.messageId === String(id)
@@ -3228,6 +3297,7 @@ Sarah: Hello!</pre>
                 const chat = conversations.find(chat => chat.id === control.dataset.previewChat);
                 control.disabled = !canEditPreview(false) || (control.dataset.previewSend === 'true' && (!chat || !getPreviewDraft(chat).text.trim()));
             });
+            document.querySelectorAll('[data-preview-choice]').forEach(select => { select.disabled = scriptDirty || !canEditPreviewSettings(); });
         }
 
         function setDirectEditing(enabled) {
@@ -3379,6 +3449,7 @@ Sarah: Hello!</pre>
         }
 
         function placePreviewMessage(chat, message, blockId = null, anchorId = null, position = 'below') {
+            if (storyFlow && !blockId && !anchorId) blockId = selectedStoryPath().blocks.filter(block => block.conversationId === chat.id).at(-1)?.id;
             let block = storyBlocks.find(block => block.conversationId === chat.id && (anchorId ? block.messageIds.includes(anchorId) : block.id === blockId));
             block ||= storyBlocks.filter(block => block.conversationId === chat.id).at(-1);
             if (!block) { block = { id: 'block_' + generateUniqueId(), conversationId: chat.id, messageIds: [] }; storyBlocks.push(block); }
@@ -4062,7 +4133,7 @@ Sarah: Hello!</pre>
             const fragment = document.createDocumentFragment();
             selectedMessages.forEach((msg, index) => {
                 if (onlyIds && !onlyIds.has(msg.id)) return;
-                const context = editableIds && !editableIds.has(msg.id);
+                const context = editableIds && !editableIds.has(msg.id) && !msg.choiceReply;
                 if (msg.type === 'timestamp') {
                     const timestamp = makeElement('div', 'message-text text-center text-xs text-gray-400 pt-10 pb-2 font-medium');
                     const anchor = makeElement('span', 'preview-message-anchor inline-block', msg.content);
@@ -4080,6 +4151,7 @@ Sarah: Hello!</pre>
                 const wrapper = makeElement('div', `flex w-full ${isMe ? 'justify-end' : 'justify-start'} ${isSequence ? 'mt-1' : 'mt-4'}`);
                 if (interactive) wrapper.id = `msg-preview-${msg.id}`;
                 wrapper.dataset.messageId = msg.id;
+                if (msg.choiceReply) { wrapper.dataset.choiceReply = 'true'; wrapper.title = 'Choice reply (edit in Script)'; }
                 if (context) wrapper.dataset.storyContext = 'true';
                 const payload = makeElement('div', 'preview-message-anchor');
                 payload.dataset.messageSide = isMe ? 'sent' : 'received';
@@ -4106,7 +4178,7 @@ Sarah: Hello!</pre>
                     shell.appendChild(content);
                     wrapper.appendChild(shell);
                 }
-                if (allowEditing && !context) decoratePreviewMessage(wrapper, chat, msg);
+                if (allowEditing && !context && !msg.choiceReply) decoratePreviewMessage(wrapper, chat, msg);
                 fragment.appendChild(wrapper);
             });
             return fragment;
@@ -4127,7 +4199,7 @@ Sarah: Hello!</pre>
         function updateStoryBlockToolsState() {
             document.getElementById('story-block-tools-note').textContent = scriptDirty
                 ? 'Apply script before moving blocks.'
-                : 'Move or copy blocks. Click to preview.';
+                : storyFlow ? 'Move blocks within scenes. Edit links in Script.' : 'Move or copy blocks. Click to preview.';
             document.querySelectorAll('#story-block-list [data-block-action]').forEach(button => {
                 button.disabled = scriptDirty || button.dataset.boundary === 'true';
             });
@@ -4138,15 +4210,17 @@ Sarah: Hello!</pre>
             const list = document.getElementById('story-block-list');
             list.replaceChildren(...storyBlocks.map((block, index) => {
                 const chat = conversations.find(chat => chat.id === block.conversationId);
+                const scene = storyFlow?.scenes.find(scene => scene.blockIds.includes(block.id));
+                const boundary = neighbor => !neighbor || (scene && !scene.blockIds.includes(neighbor.id));
                 const row = makeElement('li', 'flex items-center gap-2 bg-white border rounded p-2');
                 row.dataset.storyBlock = block.id;
                 const preview = makeElement('button', 'flex-1 min-w-0 text-left');
                 preview.append(makeElement('span', 'block text-xs font-medium truncate', `${index + 1}. ${conversationLabel(chat)}`),
-                    makeElement('span', 'block text-xs text-gray-500', `${block.messageIds.length} ${block.messageIds.length === 1 ? 'message' : 'messages'}`));
+                    makeElement('span', 'block text-xs text-gray-500', `${block.messageIds.length} ${block.messageIds.length === 1 ? 'message' : 'messages'}${scene ? ` · ${scene.id}` : ''}`));
                 preview.addEventListener('click', () => previewStoryBlock(block.id));
                 row.appendChild(preview);
-                [[`Move block ${index + 1} up`, 'fa-solid fa-arrow-up', () => moveStoryBlock(block.id, -1), index === 0],
-                    [`Move block ${index + 1} down`, 'fa-solid fa-arrow-down', () => moveStoryBlock(block.id, 1), index === storyBlocks.length - 1],
+                [[`Move block ${index + 1} up`, 'fa-solid fa-arrow-up', () => moveStoryBlock(block.id, -1), boundary(storyBlocks[index - 1])],
+                    [`Move block ${index + 1} down`, 'fa-solid fa-arrow-down', () => moveStoryBlock(block.id, 1), boundary(storyBlocks[index + 1])],
                     [`Duplicate block ${index + 1}`, 'fa-regular fa-copy', () => duplicateStoryBlock(block.id), false]].forEach(([title, icon, action, boundary]) => {
                     const button = iconButton(title, icon, action, 'px-2 py-1 text-gray-500 hover:text-blue-600');
                     button.dataset.blockAction = 'true'; button.dataset.boundary = String(boundary); row.appendChild(button);
@@ -4158,6 +4232,7 @@ Sarah: Hello!</pre>
         }
 
         function previewStoryBlock(id) {
+            if (!selectPathToBlock(id)) return showToast('This scene is not linked from the start.');
             setPreviewMode('story');
             const section = Array.from(document.querySelectorAll('#story-preview > section')).find(section => section.dataset.storyBlock === id);
             section?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start', inline: 'nearest' });
@@ -4183,6 +4258,8 @@ Sarah: Hello!</pre>
             if (!canEditStoryBlocks() || ![-1, 1].includes(direction)) return;
             const index = storyBlocks.findIndex(block => block.id === id), destination = index + direction;
             if (index < 0 || destination < 0 || destination >= storyBlocks.length) return;
+            const scene = storyFlow?.scenes.find(scene => scene.blockIds.includes(id));
+            if (scene && !scene.blockIds.includes(storyBlocks[destination].id)) return;
             beginProjectChange();
             const [block] = storyBlocks.splice(index, 1); storyBlocks.splice(destination, 0, block);
             commitStoryBlockOrder();
@@ -4197,7 +4274,10 @@ Sarah: Hello!</pre>
             const byId = new Map(chat.messages.map(message => [message.id, message]));
             const duplicates = source.messageIds.map(id => ({ ...byId.get(id), id: generateUniqueId() }));
             chat.messages.push(...duplicates);
-            storyBlocks.splice(index + 1, 0, { id: 'block_' + generateUniqueId(), conversationId: chat.id, messageIds: duplicates.map(message => message.id), ...(source.status ? { status: { ...source.status } } : {}) });
+            const block = { id: 'block_' + generateUniqueId(), conversationId: chat.id, messageIds: duplicates.map(message => message.id), ...(source.status ? { status: { ...source.status } } : {}) };
+            storyBlocks.splice(index + 1, 0, block);
+            const scene = storyFlow?.scenes.find(scene => scene.blockIds.includes(id));
+            if (scene) scene.blockIds.splice(scene.blockIds.indexOf(id) + 1, 0, block.id);
             commitStoryBlockOrder();
         }
 
@@ -4214,7 +4294,10 @@ Sarah: Hello!</pre>
             const renderVersion = ++previewRenderVersion;
             const chatContent = document.getElementById('chat-content');
             chatContent.replaceChildren();
-            if (activeConversation()) chatContent.appendChild(buildMessageFragment(activeConversation(), messages));
+            if (activeConversation()) {
+                const visible = storyFlow ? pathMessages(activeConversation()) : messages;
+                chatContent.appendChild(buildMessageFragment(activeConversation(), visible));
+            }
             configureDirectPhone(phoneContainer, activeConversation());
             configurePhoneSettings(phoneContainer, activeConversation());
             configurePreviewResizeFrame(document.getElementById('conversation-phone-frame'), activeConversation());
@@ -4236,6 +4319,7 @@ Sarah: Hello!</pre>
         }
 
         function renderMessageUpdate(id, includeNext = false) {
+            if (storyFlow) { renderPreview(); renderSearchResults(); return; }
             const chat = activeConversation();
             const scrollTop = chatContainer.scrollTop;
             const index = messages.findIndex(message => message.id === id);
@@ -4334,6 +4418,110 @@ Sarah: Hello!</pre>
             note.textContent = 'Apply script to include your edits.';
         }
 
+        function storyChoiceReply(scene, option, chat) {
+            let id = `reply:${encodeURIComponent(scene.id)}:${encodeURIComponent(option.id)}`;
+            while (chat.messages.some(message => message.id === id)) id += ':reply';
+            return { id, type: 'text', sender: chat.ownerId, content: option.text, altText: '', choiceReply: true };
+        }
+
+        function selectedStoryPath(chats = conversations, blocks = storyBlocks, flow = storyFlow, choices = previewChoices) {
+            if (!flow) return { chats, blocks, choices: {}, scenes: [] };
+            const projectedChats = chats.map(chat => ({ ...chat, messages: [...chat.messages] }));
+            const chatMap = new Map(projectedChats.map(chat => [chat.id, chat]));
+            const blockMap = new Map(blocks.map(block => [block.id, block]));
+            const sceneMap = new Map(flow.scenes.map(scene => [scene.id, scene]));
+            const selected = [], decisions = {}, scenes = [], visited = new Set();
+            let scene = sceneMap.get(flow.start);
+            while (scene) {
+                if (visited.has(scene.id)) throw new Error('Story paths cannot contain loops.');
+                visited.add(scene.id); scenes.push(scene.id);
+                for (const id of scene.blockIds) {
+                    const block = blockMap.get(id);
+                    if (block) selected.push({ ...block, messageIds: [...block.messageIds], sceneId: scene.id });
+                }
+                const exit = scene.exit;
+                if (exit.type === 'end') break;
+                if (exit.type === 'choice') {
+                    const option = exit.options.find(option => option.id === choices[exit.id]) || exit.options[0];
+                    decisions[exit.id] = option.id;
+                    const chat = chatMap.get(exit.chatId), block = selected.at(-1);
+                    if (chat && block?.conversationId === chat.id) {
+                        const reply = storyChoiceReply(scene, option, chat);
+                        chat.messages.push(reply); block.messageIds.push(reply.id);
+                    }
+                    scene = sceneMap.get(option.target);
+                } else scene = sceneMap.get(exit.target);
+            }
+            return { chats: projectedChats, blocks: selected, choices: decisions, scenes };
+        }
+
+        function pathMessages(chat, path = selectedStoryPath()) {
+            const byId = new Map(path.chats.find(item => item.id === chat.id)?.messages.map(message => [message.id, message]) || []);
+            return path.blocks.filter(block => block.conversationId === chat.id).flatMap(block => block.messageIds.map(id => byId.get(id))).filter(Boolean);
+        }
+
+        function renderPreviewPathControls() {
+            const control = document.getElementById('preview-path-controls');
+            control.classList.toggle('hidden', !storyFlow);
+            const list = document.getElementById('preview-path-choices');
+            list.replaceChildren();
+            if (!storyFlow) return;
+            const path = selectedStoryPath();
+            for (const id of path.scenes) {
+                const scene = storyFlow.scenes.find(scene => scene.id === id);
+                if (scene.exit.type !== 'choice') continue;
+                const label = makeElement('label', 'block text-xs text-gray-600', scene.id);
+                const select = makeElement('select', 'w-full min-w-0 p-2 mt-1 border rounded bg-white text-sm');
+                select.dataset.previewChoice = scene.exit.id;
+                select.setAttribute('aria-label', `Reply in ${scene.id}`);
+                for (const option of scene.exit.options) {
+                    const item = makeElement('option', '', option.text); item.value = option.id; select.appendChild(item);
+                }
+                select.value = path.choices[scene.exit.id];
+                select.disabled = scriptDirty;
+                select.addEventListener('change', () => selectPreviewChoice(scene.exit.id, select.value));
+                label.appendChild(select); list.appendChild(label);
+            }
+            if (!list.childElementCount) list.appendChild(makeElement('p', 'text-xs text-gray-500', 'This path has no choices.'));
+        }
+
+        function selectPreviewChoice(choiceId, optionId) {
+            if (!storyFlow || scriptDirty || !canEditPreviewSettings()) return;
+            const scene = storyFlow.scenes.find(scene => scene.exit.type === 'choice' && scene.exit.id === choiceId);
+            if (!scene?.exit.options.some(option => option.id === optionId)) return;
+            const path = selectedStoryPath(), decisions = {};
+            for (const id of path.scenes) {
+                const exit = storyFlow.scenes.find(scene => scene.id === id).exit;
+                if (exit.type !== 'choice') continue;
+                if (exit.id === choiceId) break;
+                decisions[exit.id] = path.choices[exit.id];
+            }
+            beginProjectChange();
+            previewChoices = { ...decisions, [choiceId]: optionId };
+            renderPreview(); applyPreviewModeLayout(); scheduleAutosave();
+        }
+
+        function selectPathToBlock(blockId) {
+            if (!storyFlow || selectedStoryPath().blocks.some(block => block.id === blockId)) return true;
+            const sceneMap = new Map(storyFlow.scenes.map(scene => [scene.id, scene]));
+            const pending = [{ id: storyFlow.start, choices: {} }], visited = new Set();
+            while (pending.length) {
+                const route = pending.pop(), scene = sceneMap.get(route.id);
+                if (!scene || visited.has(scene.id)) continue;
+                visited.add(scene.id);
+                if (scene.blockIds.includes(blockId)) {
+                    previewChoices = route.choices;
+                    renderPreview(); renderPreviewPathControls(); scheduleAutosave();
+                    return true;
+                }
+                if (scene.exit.type === 'goto') pending.push({ id: scene.exit.target, choices: route.choices });
+                if (scene.exit.type === 'choice') for (const option of [...scene.exit.options].reverse()) {
+                    pending.push({ id: option.target, choices: { ...route.choices, [scene.exit.id]: option.id } });
+                }
+            }
+            return false;
+        }
+
         function applyPreviewModeLayout() {
             const story = previewMode === 'story';
             const empty = !activeConversation();
@@ -4353,6 +4541,7 @@ Sarah: Hello!</pre>
             ['btn-save-image', 'btn-export-screenshots', 'btn-export-full'].forEach(id => document.getElementById(id).disabled = empty || captureInProgress);
             document.getElementById('btn-export-player').disabled = playerExportInProgress || !conversations.some(chat => chat.messages.length);
             updateStoryPreviewNote();
+            renderPreviewPathControls();
             updateExportLabels();
             updatePreviewToolsLayout();
             updateDirectEditingState();
@@ -4408,7 +4597,7 @@ Sarah: Hello!</pre>
             });
             applyPhoneAppearance(phone, chat, characterList);
             if (!fixedHeight) configurePhoneSettings(phone, chat, storyView?.block.id || null);
-            if (storyView?.block.status) applyPhoneStatus(phone, { settings: { ...chat.settings, ...storyView.block.status } });
+            if (storyView) applyPhoneStatus(phone, { settings: { ...chat.settings, ...storyView.block.status } });
             phonePart(phone, 'chat-content').replaceChildren(buildMessageFragment(chat, selectedMessages, false, characterList, null, allowEditing, editableIds));
             phonePart(phone, 'chat-content').style.minHeight = fixedHeight ? '' : '0';
             if (storyView) fitStoryPhoneContext(phone, storyView, characterList);
@@ -4416,14 +4605,15 @@ Sarah: Hello!</pre>
             return phone;
         }
 
-        function storyPreviewBlocks(chats = conversations, blocks = storyBlocks, includeContext = storyContext) {
-            const byChat = new Map(chats.map(chat => [chat.id, { chat, messages: new Map(chat.messages.map(message => [message.id, message])) }])), histories = new Map();
-            return blocks.map((block, index) => {
+        function storyPreviewBlocks(chats = conversations, blocks = storyBlocks, includeContext = storyContext, flow = storyFlow, choices = previewChoices) {
+            const path = selectedStoryPath(chats, blocks, flow, choices);
+            const byChat = new Map(path.chats.map(chat => [chat.id, { chat: chats.find(source => source.id === chat.id), messages: new Map(chat.messages.map(message => [message.id, message])) }])), histories = new Map();
+            return path.blocks.map((block, index) => {
                 const source = byChat.get(block.conversationId), selected = block.messageIds.map(id => source.messages.get(id));
                 const earlier = histories.get(block.conversationId) || [];
                 histories.set(block.conversationId, [...earlier, ...selected]);
                 return { block, chat: source.chat, index: index + 1, messages: selected, history: includeContext ? earlier : [],
-                    continuation: earlier.length > 0, context: [], displayMessages: selected, editableIds: new Set(block.messageIds) };
+                    continuation: earlier.length > 0, context: [], displayMessages: selected, editableIds: new Set(selected.filter(message => !message.choiceReply).map(message => message.id)) };
             });
         }
 
@@ -4442,6 +4632,7 @@ Sarah: Hello!</pre>
             const show = context => {
                 const fragment = buildMessageFragment(view.chat, context, false, characterList, null, false, view.editableIds);
                 Array.from(fragment.children).forEach(row => {
+                    row.dataset.storyContext = 'true';
                     const anchor = row.querySelector('.preview-message-anchor');
                     if (payloads.has(row.dataset.messageId)) anchor.replaceWith(payloads.get(row.dataset.messageId));
                     else payloads.set(row.dataset.messageId, anchor);
@@ -4493,7 +4684,7 @@ Sarah: Hello!</pre>
                 const text = makeElement('div', 'min-w-0');
                 const note = makeElement('p', 'text-xs text-gray-500');
                 const updateNote = () => note.textContent = `Phone: ${characterName(chat.ownerId)}${view.context.length ? ` · ${view.context.length} earlier` : ''}`;
-                text.append(makeElement('h3', 'text-sm font-semibold text-gray-700 break-words', `${index}. ${conversationLabel(chat)}`), note);
+                text.append(makeElement('h3', 'text-sm font-semibold text-gray-700 break-words', `${index}. ${conversationLabel(chat)}${block.sceneId ? ` · ${block.sceneId}` : ''}`), note);
                 const edit = makeElement('button', 'shrink-0 text-xs text-blue-600 hover:underline', 'Edit chat');
                 edit.addEventListener('click', () => { switchConversation(chat.id); setPreviewMode('conversation'); switchTab('add'); });
                 const actions = makeElement('div', 'flex items-center gap-2 shrink-0');
@@ -4526,6 +4717,7 @@ Sarah: Hello!</pre>
                 if (directEditing) section.appendChild(buildPreviewCharacterControls(chat, block.id));
                 fragment.appendChild(section);
             });
+            if (!fragment.childElementCount && storyFlow) fragment.appendChild(makeElement('p', 'max-w-sm rounded-lg border bg-white p-6 text-sm text-gray-600', 'No chats on this path. Link a scene in Script.'));
             document.getElementById('story-preview').replaceChildren(fragment);
             configurePreviewCollapseAll();
             panel.scrollTop = scrollTop;
@@ -4631,6 +4823,160 @@ Sarah: Hello!</pre>
         }
 
         // --- Parsing ---
+        function normalizePreviewChoices(flow, raw = {}) {
+            if (!flow || !isRecord(raw)) return {};
+            return Object.fromEntries(flow.scenes.filter(scene => scene.exit.type === 'choice')
+                .map(scene => scene.exit).filter(choice => Object.hasOwn(raw, choice.id) && choice.options.some(option => option.id === raw[choice.id]))
+                .map(choice => [choice.id, raw[choice.id]]));
+        }
+
+        function validateStoryFlow(raw, blocks, chats) {
+            if (raw == null) return null;
+            if (!isRecord(raw) || !Array.isArray(raw.scenes) || !raw.scenes.length || typeof raw.start !== 'string') throw new Error('Invalid story scenes.');
+            const sceneIds = new Set(), blockIds = new Map(blocks.map(block => [block.id, block])), blockOrder = new Map(blocks.map((block, index) => [block.id, index])), assigned = new Set(), choiceIds = new Set();
+            const scenes = raw.scenes.map(scene => {
+                if (!isRecord(scene) || typeof scene.id !== 'string' || !/^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(scene.id) || sceneIds.has(scene.id) || !Array.isArray(scene.blockIds) || !isRecord(scene.exit)) throw new Error('Scene names must be unique and use letters, numbers, underscores, or hyphens.');
+                sceneIds.add(scene.id);
+                let previous = -1;
+                const ids = scene.blockIds.map(id => {
+                    if (!blockIds.has(id) || assigned.has(id)) throw new Error('Each story block must belong to exactly one scene.');
+                    if (blockOrder.get(id) <= previous) throw new Error('Scene blocks must follow script order.');
+                    previous = blockOrder.get(id);
+                    assigned.add(id); return id;
+                });
+                const exit = scene.exit;
+                let next;
+                if (exit.type === 'end') next = { type: 'end' };
+                else if (exit.type === 'goto' && typeof exit.target === 'string') next = { type: 'goto', target: exit.target };
+                else if (exit.type === 'choice') {
+                    const last = blockIds.get(ids.at(-1)), chat = chats.find(chat => chat.id === exit.chatId);
+                    if (!last || !chat || last.conversationId !== chat.id || typeof exit.id !== 'string' || exit.id !== `choice:${scene.id}` || choiceIds.has(exit.id) || !Array.isArray(exit.options) || exit.options.length < 2) throw new Error('A choice needs a chat and at least two replies.');
+                    choiceIds.add(exit.id);
+                    const optionIds = new Set(), texts = new Set();
+                    const options = exit.options.map(option => {
+                        if (!isRecord(option) || typeof option.id !== 'string' || !option.id || optionIds.has(option.id) || typeof option.text !== 'string' || !option.text.trim() || typeof option.target !== 'string' || texts.has(option.text)) throw new Error('Choice replies must have unique IDs and nonempty, distinct text.');
+                        optionIds.add(option.id); texts.add(option.text);
+                        return { id: option.id, text: option.text, target: option.target };
+                    });
+                    next = { type: 'choice', id: exit.id, chatId: chat.id, options };
+                } else throw new Error(`Scene ${scene.id} needs a choice, Go to, or End.`);
+                return { id: scene.id, blockIds: ids, exit: next };
+            });
+            if (!sceneIds.has(raw.start) || assigned.size !== blocks.length) throw new Error('Story scenes must include every block and a valid start.');
+            const byId = new Map(scenes.map(scene => [scene.id, scene]));
+            const targets = scene => scene.exit.type === 'choice' ? scene.exit.options.map(option => option.target) : scene.exit.type === 'goto' ? [scene.exit.target] : [];
+            const indegrees = new Map(scenes.map(scene => [scene.id, 0]));
+            scenes.forEach(scene => targets(scene).forEach(target => {
+                if (!byId.has(target)) throw new Error(`Scene ${scene.id} points to missing scene ${target}.`);
+                indegrees.set(target, indegrees.get(target) + 1);
+            }));
+            const ready = scenes.filter(scene => indegrees.get(scene.id) === 0); let visited = 0;
+            for (let index = 0; index < ready.length; index++) {
+                visited++;
+                targets(ready[index]).forEach(target => {
+                    indegrees.set(target, indegrees.get(target) - 1);
+                    if (!indegrees.get(target)) ready.push(byId.get(target));
+                });
+            }
+            if (visited !== scenes.length) throw new Error('Story scenes contain a loop. Use forward branches and endings.');
+            return { start: raw.start, scenes };
+        }
+
+        function synchronizeStoryFlow() {
+            if (!storyFlow) return;
+            if (!storyBlocks.length) { storyFlow = null; previewChoices = {}; return; }
+            const available = new Map(storyBlocks.map(block => [block.id, block]));
+            const owners = new Map();
+            storyFlow.scenes.forEach(scene => scene.blockIds.forEach(id => { if (available.has(id) && !owners.has(id)) owners.set(id, scene.id); }));
+            let currentScene = storyFlow.start;
+            storyBlocks.forEach(block => {
+                if (owners.has(block.id)) currentScene = owners.get(block.id);
+                else owners.set(block.id, currentScene);
+            });
+            storyFlow.scenes.forEach(scene => {
+                scene.blockIds = storyBlocks.filter(block => owners.get(block.id) === scene.id).map(block => block.id);
+                if (scene.exit.type === 'choice') {
+                    const last = available.get(scene.blockIds.at(-1));
+                    if (last) scene.exit.chatId = last.conversationId;
+                    else scene.exit = { type: 'end' };
+                }
+            });
+            previewChoices = normalizePreviewChoices(storyFlow, previewChoices);
+        }
+
+        function parseScriptStructure(raw) {
+            const blocks = [], scenes = [];
+            let block = null, scene = null, choice = null;
+            const fail = (line, message) => { throw new Error(`Line ${line}: ${message}`); };
+            raw.replace(/\r\n?/g, '\n').split('\n').forEach((line, index) => {
+                const lineNumber = index + 1, trimmed = line.trim();
+                try {
+                    if (/^( {2}|\t)/.test(line) && !choice) {
+                        if (!block?.records.length || scene?.exit) fail(lineNumber, 'a continuation needs a message first.');
+                        block.records.at(-1).content += '\n' + line.replace(/^( {2}|\t)/, ''); return;
+                    }
+                    if (!trimmed) return;
+                    if (choice) {
+                        if (/^\[(?:End choice|\/Choice)\]$/i.test(trimmed)) { choice = null; return; }
+                        const option = trimmed.match(/^("(?:\\.|[^"\\])*")\s*->\s*([A-Za-z][A-Za-z0-9_-]{0,79})$/);
+                        if (!option) fail(lineNumber, 'use "Reply text" -> scene_name, then [End choice].');
+                        const text = JSON.parse(option[1]);
+                        if (!text.trim()) fail(lineNumber, 'a choice reply cannot be empty.');
+                        choice.options.push({ text, target: option[2] }); return;
+                    }
+                    const sceneHeader = trimmed.match(/^\[Scene:\s*(.*?)\]$/i);
+                    if (sceneHeader) {
+                        if (blocks.length && !scene) fail(lineNumber, 'put [Scene: name] before the first chat.');
+                        if (scene && !scene.exit) fail(lineNumber, `finish scene ${scene.id} with a choice, Go to, or End.`);
+                        if (!/^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(sceneHeader[1]) || scenes.some(scene => scene.id === sceneHeader[1])) fail(lineNumber, 'use a unique scene name starting with a letter, followed by letters, numbers, underscores, or hyphens.');
+                        scene = { id: sceneHeader[1], parts: [], exit: null, line: lineNumber }; scenes.push(scene); block = null; return;
+                    }
+                    const goTo = trimmed.match(/^\[Go to:\s*(.*?)\]$/i), end = /^\[End\]$/i.test(trimmed), beginChoice = /^\[Choice\]$/i.test(trimmed);
+                    if (goTo || end || beginChoice) {
+                        if (!scene || scene.exit) fail(lineNumber, 'put one choice, Go to, or End at the end of a named scene.');
+                        scene.exit = goTo ? { type: 'goto', target: goTo[1] } : end ? { type: 'end' } : { type: 'choice', id: `choice:${scene.id}`, options: [] };
+                        if (beginChoice) {
+                            if (!scene.parts.length) fail(lineNumber, 'a choice needs a Chat first.');
+                            choice = scene.exit;
+                        }
+                        block = null; return;
+                    }
+                    if (scene?.exit) fail(lineNumber, 'start another [Scene: name] after a scene ending.');
+                    const chatHeader = trimmed.match(/^\[Chat:\s*(.*)\]$/i);
+                    if (chatHeader) {
+                        if (block && !block.names) fail(lineNumber, 'add a chat header before the first message when mixing conversations.');
+                        block = { names: readScriptParticipants(chatHeader[1]), records: [], owner: null, line: lineNumber, sceneId: scene?.id || null };
+                        blocks.push(block); if (scene) scene.parts.push(block); return;
+                    }
+                    if (!block) {
+                        if (scene) fail(lineNumber, 'start scene messages with [Chat: Name / Name].');
+                        block = { names: null, records: [], owner: null, line: lineNumber, sceneId: null }; blocks.push(block);
+                    }
+                    const ownerHeader = trimmed.match(/^\[Phone owner:\s*(.*)\]$/i);
+                    if (ownerHeader) {
+                        if (block.records.length || block.owner) fail(lineNumber, 'put one phone-owner header before the messages.');
+                        block.owner = readScriptName(ownerHeader[1]); block.ownerLine = lineNumber; return;
+                    }
+                    if (scene && /^\[/.test(trimmed)) fail(lineNumber, 'unknown scene command.');
+                    const quoted = line.startsWith('"') ? line.match(/^("(?:\\.|[^"\\])*"): ?(.*)$/) : null;
+                    const ordinary = !line.startsWith('"') ? line.match(/^([^:]+): ?(.*)$/) : null;
+                    const match = quoted || ordinary;
+                    if (match) {
+                        const name = readScriptName(match[1]);
+                        block.records.push({ name, content: match[2], isTime: !quoted && name.toLowerCase() === 'time', line: lineNumber });
+                    } else if (block.records.length) block.records.at(-1).content += '\n' + line;
+                    else fail(lineNumber, 'use "Name: Message".');
+                } catch (error) {
+                    if (/^Line \d+:/.test(error.message)) throw error;
+                    fail(lineNumber, error.message);
+                }
+            });
+            if (choice) fail(scene.line, 'close the choice with [End choice].');
+            if (scene && !scene.exit) fail(scene.line, `finish scene ${scene.id} with a choice, Go to, or End.`);
+            if (!blocks.length && !scenes.length) throw new Error('No chats found.');
+            return { blocks, scenes };
+        }
+
         function readScriptName(value) {
             const trimmed = value.trim();
             const name = trimmed.startsWith('"') ? JSON.parse(trimmed) : trimmed;
@@ -4667,44 +5013,16 @@ Sarah: Hello!</pre>
                     messages = []; clearScriptDirty(); renderChat(); populateScriptFromMessages(); return;
                 }
                 saveActiveConversation();
-                const blocks = [];
-                let block;
-                raw.replace(/\r\n?/g, '\n').split('\n').forEach((line, index) => {
-                    const lineNumber = index + 1;
-                    errorLine = lineNumber;
-                    if (/^( {2}|\t)/.test(line)) {
-                        if (!block?.records.length) throw new Error(`Line ${lineNumber}: a continuation needs a sender first.`);
-                        block.records.at(-1).content += '\n' + line.replace(/^( {2}|\t)/, ''); return;
-                    }
-                    if (!line.trim()) return;
-                    const chatHeader = line.trim().match(/^\[Chat:\s*(.*)\]$/i);
-                    if (chatHeader) {
-                        if (block && !block.names) throw new Error('Add a chat header before the first message when mixing conversations.');
-                        block = { names: readScriptParticipants(chatHeader[1]), records: [], owner: null, line: lineNumber };
-                        blocks.push(block); return;
-                    }
-                    if (!block) { block = { names: null, records: [], owner: null, line: lineNumber }; blocks.push(block); }
-                    const ownerHeader = line.trim().match(/^\[Phone owner:\s*(.*)\]$/i);
-                    if (ownerHeader) {
-                        if (block.records.length || block.owner) throw new Error(`Line ${lineNumber}: put one phone-owner header before the messages.`);
-                        block.owner = readScriptName(ownerHeader[1]); block.ownerLine = lineNumber; return;
-                    }
-                    const quoted = line.startsWith('"') ? line.match(/^("(?:\\.|[^"\\])*"): ?(.*)$/) : null;
-                    const ordinary = !line.startsWith('"') ? line.match(/^([^:]+): ?(.*)$/) : null;
-                    const match = quoted || ordinary;
-                    if (match) {
-                        const name = readScriptName(match[1]);
-                        block.records.push({ name, content: match[2], isTime: !quoted && name.toLowerCase() === 'time', line: lineNumber });
-                    } else if (block.records.length) block.records.at(-1).content += '\n' + line;
-                    else throw new Error(`Line ${lineNumber}: use "Name: Message".`);
-                });
-                if (!blocks.length) throw new Error('No chats found.');
+                const { blocks, scenes } = parseScriptStructure(raw);
+                if (storyFlow && !scenes.length && !blocks.some(block => block.names)) throw new Error('Keep the Scene headers when editing a branching story. Use the preview to edit one chat.');
                 const nextCharacters = characters.map(character => ({ ...character }));
                 const allImages = new Map(conversations.flatMap(chat => [...chat.imageCache]));
                 const updates = new Map();
                 const explicitOwners = new Map();
                 const parsedBlocks = [];
                 const previousBlocks = new Map(conversations.map(chat => [chat.id, storyBlocks.filter(block => block.conversationId === chat.id)]));
+                const previousScenes = new Map((storyFlow?.scenes || []).map(scene => [scene.id, scene]));
+                const previousById = new Map(storyBlocks.map(block => [block.id, block]));
                 const blockCounts = new Map();
                 blocks.forEach(part => {
                     errorLine = part.line;
@@ -4735,26 +5053,51 @@ Sarah: Hello!</pre>
                         chat.messages.push({ id, sender, timestamp: 'Now',
                             ...(record.isTime ? { type: 'timestamp', content: record.content, altText: '' } : parseMessagePayload(record.content, true, allImages)) });
                     });
-                    const occurrence = blockCounts.get(chat.id) || 0, previous = previousBlocks.get(chat.id)?.[occurrence];
-                    blockCounts.set(chat.id, occurrence + 1);
-                    parsedBlocks.push({ id: previous?.id || 'block_' + generateUniqueId(), conversationId: chat.id, messageIds,
-                        ...(previous?.status ? { status: { ...previous.status } } : {}) });
+                    const scope = scenes.length && storyFlow ? `${part.sceneId}:${chat.id}` : chat.id;
+                    const occurrence = blockCounts.get(scope) || 0;
+                    const candidates = scenes.length && storyFlow ? (previousScenes.get(part.sceneId)?.blockIds || []).map(id => previousById.get(id)).filter(block => block?.conversationId === chat.id) : previousBlocks.get(chat.id);
+                    const previous = candidates?.[occurrence];
+                    blockCounts.set(scope, occurrence + 1);
+                    const parsed = { id: previous?.id || 'block_' + generateUniqueId(), conversationId: chat.id, messageIds,
+                        ...(previous?.status ? { status: { ...previous.status } } : {}) };
+                    parsedBlocks.push(parsed); part.blockId = parsed.id;
                 });
                 const updated = [...updates.values()];
                 const nextConversations = conversations.map(chat => updated.find(item => item.id === chat.id) || chat);
                 updated.filter(chat => !nextConversations.some(item => item.id === chat.id)).forEach(chat => nextConversations.push(chat));
-                const nextActiveId = updated.some(chat => chat.id === activeConversationId) ? activeConversationId : updated[0].id;
+                const nextActiveId = updated.some(chat => chat.id === activeConversationId) ? activeConversationId : updated[0]?.id || activeConversationId;
                 const updatedIds = new Set(updated.map(chat => chat.id));
                 let nextBlocks;
-                if (blocks.some(block => block.names)) {
+                if (scenes.length || blocks.some(block => block.names)) {
                     nextBlocks = [...parsedBlocks, ...storyBlocks.filter(block => !updatedIds.has(block.conversationId))];
                 } else {
                     const first = storyBlocks.findIndex(block => updatedIds.has(block.conversationId));
                     nextBlocks = storyBlocks.filter(block => !updatedIds.has(block.conversationId));
                     nextBlocks.splice(Math.max(0, first), 0, ...parsedBlocks);
                 }
+                let nextFlow = null;
+                if (scenes.length) {
+                    const nextScenes = scenes.map(scene => {
+                        const exit = { ...scene.exit };
+                        if (exit.type === 'choice') {
+                            const last = parsedBlocks.find(block => block.id === scene.parts.at(-1).blockId);
+                            exit.chatId = last.conversationId;
+                            const previousOptions = previousScenes.get(scene.id)?.exit.options || [];
+                            exit.options = exit.options.map(option => ({ ...option, id: previousOptions.find(old => old.text === option.text && old.target === option.target)?.id || 'option_' + generateUniqueId() }));
+                        }
+                        return { id: scene.id, blockIds: scene.parts.map(part => part.blockId), exit };
+                    });
+                    const remaining = nextBlocks.filter(block => !parsedBlocks.some(parsed => parsed.id === block.id));
+                    if (remaining.length) {
+                        let id = 'other_chats', suffix = 2;
+                        while (nextScenes.some(scene => scene.id === id)) id = `other_chats_${suffix++}`;
+                        nextScenes.push({ id, blockIds: remaining.map(block => block.id), exit: { type: 'end' } });
+                    }
+                    nextFlow = validateStoryFlow({ start: nextScenes[0].id, scenes: nextScenes }, nextBlocks, nextConversations);
+                }
                 beginProjectChange(); clearScriptError();
                 characters = nextCharacters; conversations = nextConversations; storyBlocks = nextBlocks;
+                storyFlow = nextFlow; previewChoices = normalizePreviewChoices(storyFlow, previewChoices);
                 clearScriptDirty(); loadConversation(nextActiveId); populateScriptFromMessages();
                 showToast(`Updated ${updated.length} chat${updated.length === 1 ? '' : 's'}.`);
             } catch (error) {
@@ -5393,10 +5736,14 @@ Sarah: Hello!</pre>
                 const template = phoneContainer.cloneNode(true);
                 const label = chat => chat.participantIds.map(id => characterName(id, characterList)).join(' / ');
                 const captureBlocks = storyBlocks.map(block => ({ ...block, messageIds: [...block.messageIds], ...(block.status ? { status: { ...block.status } } : {}) }));
-                const jobs = story ? storyPreviewBlocks([...chats.values()], captureBlocks, storyContext)
-                    : [{ chat: selected, index: 1, messages: selected.messages, displayMessages: selected.messages }];
-                const statusTimeline = captureOptions.statusProgress.enabled || captureBlocks.some(block => block.status)
-                    ? buildExportStatusTimeline([...chats.values()], captureBlocks) : null;
+                const captureFlow = storyFlow ? JSON.parse(JSON.stringify(storyFlow)) : null, captureChoices = { ...previewChoices };
+                const path = selectedStoryPath([...chats.values()], captureBlocks, captureFlow, captureChoices);
+                const selectedMessages = captureFlow ? pathMessages(selected, path) : selected.messages;
+                const jobs = story ? storyPreviewBlocks([...chats.values()], captureBlocks, storyContext, captureFlow, captureChoices)
+                    : [{ chat: selected, index: 1, messages: selectedMessages, displayMessages: selectedMessages }];
+                if (!jobs.length) throw new Error('This path has no chat blocks. Link a scene with a chat before exporting.');
+                const statusTimeline = captureOptions.statusProgress.enabled || path.blocks.some(block => block.status)
+                    ? buildExportStatusTimeline(path.chats, path.blocks) : null;
                 const previewFrame = document.getElementById('conversation-phone-frame');
                 const scrollRatio = collapsedPreviewChats.get(previewFrame.dataset.collapseKey)?.scrollRatio
                     ?? (chatContainer.scrollHeight > chatContainer.clientHeight ? chatContainer.scrollTop / (chatContainer.scrollHeight - chatContainer.clientHeight) : 0);
@@ -5621,8 +5968,9 @@ Sarah: Hello!</pre>
             if (!project.conversations.some(chat => chat.messages.length)) throw new Error('Add a message before exporting for the player.');
             const chatsById = new Map(project.conversations.map(chat => [chat.id, chat]));
             const messageMaps = new Map(project.conversations.map(chat => [chat.id, new Map(chat.messages.map(message => [message.id, message]))]));
-            const nodes = [];
+            const nodes = [], blockNodes = new Map();
             project.storyBlocks.forEach(block => {
+                const offset = nodes.length;
                 const chat = chatsById.get(block.conversationId);
                 nodes.push({ id: `chat:${encodeURIComponent(block.id)}`, type: 'chat', chatId: chat.id, ...(block.status ? { status: { ...block.status } } : {}) });
                 block.messageIds.forEach(id => {
@@ -5635,13 +5983,63 @@ Sarah: Hello!</pre>
                     }
                     nodes.push({ id: `message:${encodeURIComponent(block.id)}:${encodeURIComponent(source.id)}`, type: 'message', chatId: chat.id, message });
                 });
+                blockNodes.set(block.id, nodes.slice(offset));
             });
             nodes.push({ id: 'end', type: 'end' });
             nodes.slice(0, -1).forEach((node, index) => { node.next = nodes[index + 1].id; });
+            let startNodeId = nodes[0].id;
+            const flow = validateStoryFlow(project.flow, project.storyBlocks, project.conversations);
+            if (flow) {
+                const scenes = new Map(flow.scenes.map(scene => [scene.id, scene]));
+                const entry = id => {
+                    const visited = new Set();
+                    while (id) {
+                        if (visited.has(id)) throw new Error('Story paths cannot contain loops.');
+                        visited.add(id);
+                        const scene = scenes.get(id);
+                        if (scene.blockIds.length) return blockNodes.get(scene.blockIds[0])[0].id;
+                        if (scene.exit.type === 'end') return 'end';
+                        id = scene.exit.target;
+                    }
+                    return 'end';
+                };
+                for (const scene of flow.scenes) {
+                    if (!scene.blockIds.length) continue;
+                    for (let index = 0; index < scene.blockIds.length - 1; index++) {
+                        blockNodes.get(scene.blockIds[index]).at(-1).next = blockNodes.get(scene.blockIds[index + 1])[0].id;
+                    }
+                    const tail = blockNodes.get(scene.blockIds.at(-1)).at(-1), exit = scene.exit;
+                    if (exit.type === 'end') tail.next = 'end';
+                    else if (exit.type === 'goto') tail.next = entry(exit.target);
+                    else {
+                        const chat = chatsById.get(exit.chatId);
+                        const choice = { id: exit.id, type: 'choice', chatId: chat.id, options: [] };
+                        tail.next = choice.id;
+                        for (const option of exit.options) {
+                            const source = storyChoiceReply(scene, option, chat);
+                            const reply = { id: `reply:${encodeURIComponent(scene.id)}:${encodeURIComponent(option.id)}`, type: 'message', chatId: chat.id,
+                                message: { id: source.id, type: 'text', sender: source.sender, content: source.content, altText: '' }, next: entry(option.target) };
+                            choice.options.push({ id: option.id, text: option.text, next: reply.id }); nodes.push(reply);
+                        }
+                        nodes.push(choice);
+                    }
+                }
+                startNodeId = entry(flow.start);
+                const byId = new Map(nodes.map(node => [node.id, node])), reachable = new Set(), pending = [startNodeId];
+                for (let index = 0; index < pending.length; index++) {
+                    const id = pending[index];
+                    if (reachable.has(id)) continue;
+                    reachable.add(id);
+                    const node = byId.get(id);
+                    if (node.type === 'choice') pending.push(...node.options.map(option => option.next));
+                    else if (node.next != null) pending.push(node.next);
+                }
+                if (![...reachable].some(id => byId.get(id).type === 'message')) throw new Error('The starting scene does not reach any messages. Link it to a chat before exporting.');
+            }
             const names = new Map(project.characters.map(character => [character.id, character.name]));
             const appearanceKeys = ['time', 'battery', 'signalStrength', 'wifiStrength', 'theme', 'darkMode', 'screenWidth', 'showAvatar', 'showFrame', 'cropImages', 'avatar'];
             return {
-                format: 'chat-story-player', version: 1,
+                format: 'chat-story-player', version: flow ? 2 : 1,
                 story: { id: projectId, title: project.projectName || 'Untitled story' },
                 characters: project.characters.map(character => ({ id: character.id, name: character.name, avatar: character.avatar })),
                 chats: project.conversations.map(chat => ({
@@ -5649,7 +6047,7 @@ Sarah: Hello!</pre>
                     participantIds: [...chat.participantIds], ownerId: chat.ownerId,
                     settings: Object.fromEntries(appearanceKeys.map(key => [key, chat.settings[key]]))
                 })),
-                startNodeId: nodes[0].id, nodes
+                startNodeId, nodes
             };
         }
 
@@ -5712,7 +6110,8 @@ Sarah: Hello!</pre>
             synchronizeStoryBlocks();
             return {
                 storyBlocks: storyBlocks.map(block => ({ ...block, messageIds: [...block.messageIds], ...(block.status ? { status: { ...block.status } } : {}) })), previewMode, storyContext,
-                version: 2, date: new Date().toISOString(), projectName, activeConversationId, exportOptions: { ...exportOptions },
+                version: storyFlow ? 3 : 2, date: new Date().toISOString(), projectName, activeConversationId, exportOptions: { ...exportOptions },
+                flow: storyFlow ? JSON.parse(JSON.stringify(storyFlow)) : null, previewChoices: { ...previewChoices },
                 shareAppearance, sharedAppearance: { ...sharedAppearance },
                 directEditing,
                 characters: characters.map(character => ({ ...character })),
@@ -5869,7 +6268,8 @@ Sarah: Hello!</pre>
             if (!isRecord(data)) throw new Error('The backup must be an object.');
             if (data.format === 'chat-story-player') throw new Error('This is a player story. Open it in the player; use a story backup to restore an editable story.');
             if (data.version === undefined || data.version === 1) return migrateLegacyBackup(data);
-            if (data.version !== 2) throw new Error('This backup version is not supported.');
+            if (![2, 3].includes(data.version)) throw new Error('This backup version is not supported.');
+            if (data.flow != null && data.version !== 3) throw new Error('Branching stories need backup version 3.');
             if (data.projectName !== undefined && (typeof data.projectName !== 'string' || !data.projectName.trim() || data.projectName.length > 80 || /[\r\n]/.test(data.projectName))) throw new Error('Invalid story name.');
             if (!Array.isArray(data.characters) || !Array.isArray(data.conversations)) throw new Error('The backup needs character and conversation lists.');
             const characterIds = new Set(), names = new Set();
@@ -5944,6 +6344,8 @@ Sarah: Hello!</pre>
                 });
                 if (nextConversations.some(chat => !covered.has(chat.id) || covered.get(chat.id).size !== chat.messages.length || [...covered.get(chat.id)].some((id, index) => chat.messages[index].id !== id))) throw new Error('Script order must include every conversation and message in order.');
             }
+            const flow = validateStoryFlow(data.flow, nextBlocks, nextConversations);
+            if (data.previewChoices !== undefined && !isRecord(data.previewChoices)) throw new Error('Invalid preview choices.');
             if (data.previewMode !== undefined && !['conversation', 'story'].includes(data.previewMode)) throw new Error('Invalid preview mode.');
             if (data.storyContext !== undefined && typeof data.storyContext !== 'boolean') throw new Error('Invalid story context option.');
             if (data.directEditing !== undefined && typeof data.directEditing !== 'boolean') throw new Error('Invalid preview editing option.');
@@ -5966,7 +6368,7 @@ Sarah: Hello!</pre>
                     || (status.wifiVariation !== undefined && (!Number.isInteger(status.wifiVariation) || status.wifiVariation < 0 || status.wifiVariation > 3))
                     || (status.batteryDrop !== undefined && (!Number.isInteger(status.batteryDrop) || status.batteryDrop < 0 || status.batteryDrop > 100))) throw new Error('Invalid status progression options.');
             }
-            return { characters: nextCharacters, conversations: nextConversations, activeConversationId: data.activeConversationId, scriptDraft: data.scriptDraft ?? null, storyBlocks: nextBlocks, previewMode: data.previewMode || 'story', storyContext: data.storyContext ?? true, directEditing: data.directEditing ?? true, exportOptions: exportOptionsWithDefaults(options), projectName: data.projectName?.trim(), ...validateAppearanceOptions(data, nextConversations, data.activeConversationId) };
+            return { characters: nextCharacters, conversations: nextConversations, activeConversationId: data.activeConversationId, scriptDraft: data.scriptDraft ?? null, storyBlocks: nextBlocks, flow, previewChoices: normalizePreviewChoices(flow, data.previewChoices), previewMode: data.previewMode || 'story', storyContext: data.storyContext ?? true, directEditing: data.directEditing ?? true, exportOptions: exportOptionsWithDefaults(options), projectName: data.projectName?.trim(), ...validateAppearanceOptions(data, nextConversations, data.activeConversationId) };
         }
 
         let backupImportVersion = 0;

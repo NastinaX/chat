@@ -121,6 +121,8 @@
     .dark .new-messages-divider { color: #9ca3af; }
     .dark .new-messages-divider::before, .dark .new-messages-divider::after { background: #30343c; }
     .dark #scripted-message { background: #1d1e24; border-color: #30313a; color: #e7eaf0; }
+    .dark .reply-options { border-color: #25272c; }
+    .dark .reply-option { border-color: #424b5c; }
     .dark .home-indicator::after { background: #fff; }
     #player-controls { position: fixed; inset: 16px 16px auto auto; width: 320px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); margin: 0; padding: 18px; border: 1px solid #dfe4ec; border-radius: 16px; background: white; color: #34445e; box-shadow: 0 12px 45px #17223824; }
     #player-controls::backdrop { background: #17223820; }
@@ -158,6 +160,13 @@
     .timeline-node[data-kind="chat"] { background: var(--moment-tint); border-color: var(--moment-color); }
     .timeline-node:is([data-kind="start"], [data-kind="end"], [data-kind="timestamp"]) { align-items: center; border-left-width: 1px; border-radius: 20px; text-align: center; }
     .timeline-node.played { opacity: 1; }
+    .timeline-node.unexplored { opacity: .35; }
+    .timeline-node[data-kind="choice"] { border-style: dashed; border-color: #b17bd2; background: #faf5ff; }
+    .reply-options { flex: none; display: grid; gap: 7px; padding: 10px 12px; max-height: 190px; overflow-y: auto; border-top: 1px solid #e5e7eb; }
+    .reply-option { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 14px; background: transparent; color: inherit; text-align: left; font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+    .reply-option:hover, .reply-option[aria-pressed="true"] { border-color: #3973d6; background: #3973d615; }
+    .reply-option:focus-visible { outline: 2px solid #3973d6; outline-offset: 2px; }
+    .reply-option:disabled { opacity: .5; cursor: default; }
     .timeline-node.current { opacity: 1; outline: 2px solid #83abf7; outline-offset: 3px; }
     .timeline-node.selected:not(.current) { box-shadow: 0 0 0 2px #2563eb18; }
     .timeline-node strong, .timeline-node span { display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -169,6 +178,7 @@
     .timeline-node[data-detail="dot"].current { outline: none; }
     .timeline-node[data-detail="dot"].current::before { box-shadow: 0 0 0 3px #f8fafd, 0 0 0 5px #83abf7; }
     .timeline-node[data-detail="label"] { padding: 5px 10px; gap: 0; }
+    .timeline-node[data-detail="decision"] { align-items: center; padding: 2px 3px; gap: 0; text-align: center; }
     .timeline-node[data-detail="segment"] { padding: 6px 10px; gap: 2px; border-left-width: 3px; background: var(--moment-tint); }
     .timeline-node.active-segment { border-color: #83abf7; }
     .timeline-segment { position: absolute; width: 28px; padding: 0; border-radius: 14px; background: transparent; }
@@ -201,7 +211,7 @@
         <div class="phone-status"><span id="clock">9:41</span><div class="status-icons"><svg id="signal" width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect data-bar="1" x="1" y="14" width="3" height="5" rx=".7"/><rect data-bar="2" x="6" y="10" width="3" height="9" rx=".7"/><rect data-bar="3" x="11" y="6" width="3" height="13" rx=".7"/><rect data-bar="4" x="16" y="2" width="3" height="17" rx=".7"/></svg><svg id="wifi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path data-level="3" d="M2 8a16 16 0 0 1 20 0"/><path data-level="2" d="M5 12a11 11 0 0 1 14 0"/><path data-level="1" d="M8.5 15.5a5.5 5.5 0 0 1 7 0"/><circle cx="12" cy="19" r=".8" fill="currentColor" stroke="none"/><path id="wifi-off" d="m3 3 18 18" hidden/></svg><div class="battery"><span id="battery-text">100%</span><svg width="26" height="16" viewBox="0 0 25 14" fill="none" aria-hidden="true"><rect x="1" y="1" width="20" height="12" rx="3" stroke="currentColor"/><path d="M23 5v4" stroke="currentColor" stroke-width="2"/><rect id="battery-fill" x="3" y="3" width="16" height="8" rx="1.5" fill="currentColor"/></svg></div></div></div>
         <section id="conversation-view" class="phone-view" aria-label="Conversation">
         <div class="phone-header"><button id="chat-back" aria-label="Chats" title="Chats" aria-controls="chat-overview" disabled><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span id="back-unread" hidden></span></button><div class="contact"><span id="contact-avatar" class="avatar">S</span><span id="chat-name">Story Player</span></div><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="m15 10 6-3v10l-6-3"/></svg></div>
-        <div id="chat-scroll" class="drag-scroll" tabindex="0" aria-label="Revealed messages"><div id="chat-messages"></div><div id="typing" class="typing" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="typing-label"></span></div><div id="phone-empty" class="phone-empty"><span id="phone-empty-text" hidden></span><div id="phone-open-actions" class="phone-open-actions"><button id="phone-open-button" class="button primary">Open story</button><button id="phone-example-button" class="text-button">Try example</button></div></div></div>
+        <div id="chat-scroll" class="drag-scroll" tabindex="0" aria-label="Revealed messages"><div id="chat-messages"></div><div id="typing" class="typing" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="typing-label"></span></div><div id="phone-empty" class="phone-empty"><span id="phone-empty-text" hidden></span><div id="phone-open-actions" class="phone-open-actions"><button id="phone-open-button" class="button primary">Open story</button><button id="phone-example-button" class="text-button">Try example</button><button id="phone-branching-example-button" class="text-button">Try branching</button></div></div></div>
         </section>
         <section id="chat-overview" class="phone-view" aria-label="Chats" hidden>
           <div class="overview-header"><h2>Messages</h2><button id="overview-current" aria-label="Current chat" title="Current chat"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>
@@ -210,6 +220,7 @@
         <button id="chat-notification" hidden><span id="notification-avatar" class="avatar"></span><span class="notification-copy"><span class="notification-heading"><span id="notification-title"></span><span id="notification-owner"></span></span><span id="notification-preview"></span></span></button>
         <span id="notification-announcement" class="sr-only" role="status" aria-live="polite"></span>
         <div id="phone-session" class="phone-session" hidden><span id="phone-role"></span><button id="phone-play-button" class="button primary" hidden>Replay</button></div>
+        <div id="reply-options" class="reply-options" role="group" aria-label="Choose a reply" hidden></div>
         <div id="chat-composer" class="composer"><label for="scripted-message" class="sr-only">Your next scripted message</label><textarea id="scripted-message" rows="1" readonly placeholder="Message" aria-describedby="playback-status"></textarea><button id="send-button" aria-label="Send next message" title="Send next message (Enter)" disabled><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
         <div class="home-indicator" aria-hidden="true"></div>
       </div>
@@ -232,7 +243,7 @@
         <p id="playback-status" role="status" aria-live="polite">Open a story to start.</p>
       </section>
       <div class="navigation-controls"><button id="show-chats-button" class="button" disabled>Chats</button><button id="timeline-button" class="button" aria-controls="timeline-panel" aria-expanded="false" disabled>Timeline</button></div>
-      <div class="controls-footer"><button id="example-button" class="text-button">Try example</button><a href="index.html">Generator</a></div>
+      <div class="controls-footer"><button id="example-button" class="text-button">Try example</button><button id="branching-example-button" class="text-button">Try branching</button><a href="index.html">Generator</a></div>
       <p id="error" role="alert" hidden></p>
     </dialog>
   <div id="drop-overlay" hidden>Open story</div>
@@ -266,7 +277,7 @@
     }
     function validateStory(data) {
       if (!isObject(data) || data.format !== 'chat-story-player') throw new Error('Choose a Player JSON exported from the generator’s Export section.');
-      if (data.version !== 1) throw new Error(`Story version ${String(data.version)} is not supported. Export it again with the current generator.`);
+      if (![1,2].includes(data.version)) throw new Error(`Story version ${String(data.version)} is not supported. Export it again with the current generator.`);
       if (!isObject(data.story)) throw new Error('The story needs an ID and title.');
       const story = { id: requireString(data.story.id,'Story ID'), title: requireString(data.story.title,'Story title') };
       if (!Array.isArray(data.characters) || !Array.isArray(data.chats) || !Array.isArray(data.nodes)) throw new Error('The story needs character, chat, and node lists.');
@@ -289,9 +300,20 @@
       for (const item of data.nodes) {
         if (!isObject(item)) throw new Error('Invalid story step.');
         const id = requireString(item.id,'Node ID'); if (nodes.has(id)) throw new Error('Node IDs must be unique.');
-        if (!['chat','message','end'].includes(item.type)) throw new Error(`Step type “${String(item.type)}” is not supported yet. Choices need a future player version.`);
+        if (!['chat','message','end',...(data.version===2?['choice']:[])].includes(item.type)) throw new Error(`Step type “${String(item.type)}” is not supported in this story version.`);
         if (item.type === 'end') { if (item.next != null) throw new Error('An end step cannot have a next step.'); nodes.set(id,Object.freeze({id,type:'end'})); continue; }
         if (!chats.has(item.chatId)) throw new Error('A step refers to an unknown chat.');
+        if(item.type==='choice') {
+          if(item.next!==undefined||item.status!==undefined||!Array.isArray(item.options)||item.options.length<2)throw new Error('A choice needs at least two reply options.');
+          const ids=new Set(),texts=new Set();
+          const options=item.options.map(option=>{
+            if(!isObject(option))throw new Error('Invalid choice option.');
+            const optionId=requireString(option.id,'Option ID'),text=requireString(option.text,'Option reply'),next=requireString(option.next,'Option destination');
+            if(ids.has(optionId)||texts.has(text))throw new Error('Choice options must have distinct IDs and replies.');
+            ids.add(optionId);texts.add(text);return Object.freeze({id:optionId,text,next});
+          });
+          nodes.set(id,Object.freeze({id,type:'choice',chatId:item.chatId,options:Object.freeze(options)}));continue;
+        }
         if (!Object.hasOwn(item,'next') || (item.next !== null && (typeof item.next !== 'string' || !item.next.trim()))) throw new Error('Each chat or message step needs a next ID or null.');
         const node = {id,type:item.type,chatId:item.chatId,next:item.next};
         if(item.status!==undefined) {
@@ -316,50 +338,70 @@
       }
       const startNodeId = requireString(data.startNodeId,'Start node ID');
       if (!nodes.has(startNodeId)) throw new Error('The story’s starting step is missing.');
-      for (const node of nodes.values()) if (node.next != null && !nodes.has(node.next)) throw new Error('A next step points to a missing node.');
-      // Every v1 node has at most one outgoing edge. Validate iteratively so large stories do not overflow the call stack.
-      const complete = new Set();
-      for (const start of nodes.keys()) {
-        const chain = new Set(); let id = start;
-        while (id !== null && !complete.has(id)) {
-          if (chain.has(id)) throw new Error('This story contains a loop. Automatic cycles are not supported.');
-          chain.add(id); const node = nodes.get(id); id = node.type==='end'?null:node.next;
-        }
-        chain.forEach(id=>complete.add(id));
+      const incoming=new Map(Array.from(nodes.keys(),id=>[id,0]));
+      for(const node of nodes.values())for(const next of storyNodeTargets(node)) {
+        if(!nodes.has(next))throw new Error('A next step points to a missing node.');
+        incoming.set(next,incoming.get(next)+1);
       }
+      for(const node of nodes.values())if(node.type==='choice')for(const option of node.options) {
+        const reply=nodes.get(option.next),chat=chats.get(node.chatId);
+        if(reply.type!=='message'||reply.chatId!==node.chatId||reply.message.type!=='text'||reply.message.sender!==chat.ownerId||reply.message.content!==option.text)throw new Error('Each choice must lead to its phone owner’s matching reply.');
+      }
+      // Validate every branch iteratively, including unreachable nodes.
+      const ready=Array.from(nodes.keys()).filter(id=>incoming.get(id)===0);
+      for(let cursor=0;cursor<ready.length;cursor++)for(const next of storyNodeTargets(nodes.get(ready[cursor]))) {
+        incoming.set(next,incoming.get(next)-1);if(incoming.get(next)===0)ready.push(next);
+      }
+      if(ready.length!==nodes.size)throw new Error('This story contains a loop. Automatic cycles are not supported.');
       const path = traceStoryRoute({nodes,startNodeId});
-      const messageCount = path.filter(node=>node.type==='message').length;
+      const reachable=reachableStoryNodes({nodes,startNodeId});
+      const messageCount = (data.version===2?reachable:path).filter(node=>node.type==='message').length;
       if (!messageCount) throw new Error('This story has no playable messages.');
-      return Object.freeze({story:Object.freeze(story),characters,chats,nodes,startNodeId,messageCount,partCount:path.filter(node=>node.type==='chat').length});
+      return Object.freeze({version:data.version,story:Object.freeze(story),characters,chats,nodes,startNodeId,messageCount,branching:reachable.some(node=>node.type==='choice'),partCount:path.filter(node=>node.type==='chat').length});
     }
 
-    // Route resolution is shared by playback, seeking, and the timeline. Future choices
-    // can select an outgoing link here without using a message's array position as its identity.
-    function nextStoryNodeId(node) { return node.type==='end'?null:node.next; }
-    function traceStoryRoute(story) {
+    function storyNodeTargets(node) { return node.type==='choice'?node.options.map(option=>option.next):node.type==='end'||node.next===null?[]:[node.next]; }
+    function nextStoryNodeId(node,decisions=new Map()) { return node.type==='choice'?node.options.find(option=>option.id===decisions.get(node.id))?.next??null:node.type==='end'?null:node.next; }
+    function reachableStoryNodes(story) {
+      const seen=new Set(),route=[],queue=[story.startNodeId];
+      for(let cursor=0;cursor<queue.length;cursor++) {
+        const id=queue[cursor];if(seen.has(id))continue;seen.add(id);
+        const node=story.nodes.get(id);route.push(node);queue.push(...storyNodeTargets(node));
+      }
+      return route;
+    }
+    function traceStoryRoute(story,decisions=new Map()) {
       const route=[], seen=new Set(); let id=story.startNodeId;
       while(id!==null) {
         const node=story.nodes.get(id);
         if(!node || seen.has(id))throw new Error('The story path is invalid.');
-        seen.add(id);route.push(node);id=nextStoryNodeId(node);
+        seen.add(id);route.push(node);id=nextStoryNodeId(node,decisions);
       }
       return Object.freeze(route);
     }
 
     class PlaybackEngine {
-      constructor(story) { this.story=story; this.route=traceStoryRoute(story);this.routeIndex=new Map(this.route.map((node,index)=>[node.id,index]));this.reset(); }
-      reset() { this.nodeId=this.story.startNodeId; this.visitedNodeIds=[]; this.histories=new Map(); this.returnMarkers=new Map(); this.chatStatuses=new Map(); this.lastMessageChatId=null; this.visitedChatIds=[]; this.activeChatId=null; this.started=false; this.finished=false; this.messageCount=0; this.part=0; }
+      constructor(story) { this.story=story;this.reset(); }
+      refreshRoute() { this.route=traceStoryRoute(this.story,this.decisions);this.routeIndex=new Map(this.route.map((node,index)=>[node.id,index])); }
+      reset(decisions=new Map()) { this.decisions=new Map(decisions);this.nodeId=this.story.startNodeId; this.visitedNodeIds=[]; this.histories=new Map(); this.returnMarkers=new Map(); this.chatStatuses=new Map(); this.lastMessageChatId=null; this.visitedChatIds=[]; this.activeChatId=null; this.started=false; this.finished=false; this.messageCount=0; this.part=0;this.refreshRoute(); }
       current() { return this.nodeId===null?null:this.story.nodes.get(this.nodeId); }
       chat() { return this.activeChatId===null?null:this.story.chats.get(this.activeChatId); }
-      isOwnerTurn() { const node=this.current(); return node?.type==='message' && node.message.type!=='timestamp' && node.message.sender===this.story.chats.get(node.chatId).ownerId; }
+      preparedReply() { const node=this.current();return node?.type==='choice'?this.story.nodes.get(nextStoryNodeId(node,this.decisions))||null:node?.type==='message'?node:null; }
+      isOwnerTurn() { const node=this.preparedReply(); return !!node && node.message.type!=='timestamp' && node.message.sender===this.story.chats.get(node.chatId).ownerId; }
+      choose(optionId) {
+        const node=this.current();if(node?.type!=='choice')return false;
+        const option=node.options.find(option=>option.id===optionId);if(!option)return false;
+        this.decisions.set(node.id,option.id);this.refreshRoute();return true;
+      }
       advance() {
         const node=this.current(); if (!node || this.finished) return null;
+        if(node.type==='choice'&&!this.decisions.has(node.id))return null;
         this.visitedNodeIds.push(node.id);
         if (node.type!=='end') {
           this.activeChatId=node.chatId;
           if (!this.histories.has(node.chatId)) { this.histories.set(node.chatId,[]); this.visitedChatIds.push(node.chatId); }
           if (node.type==='chat') { this.part++;this.chatStatuses.set(node.chatId,node.status||{}); }
-          else {
+          else if(node.type==='message') {
             const history=this.histories.get(node.chatId);
             if(history.length && this.lastMessageChatId!==node.chatId) {
               if(!this.returnMarkers.has(node.chatId))this.returnMarkers.set(node.chatId,new Set());
@@ -368,27 +410,29 @@
             history.push(node.message);this.lastMessageChatId=node.chatId;this.messageCount++;
           }
         }
-        this.nodeId=nextStoryNodeId(node);
+        this.nodeId=nextStoryNodeId(node,this.decisions);
         this.finished=this.nodeId===null;
         return node;
       }
       seekTo(nodeId) {
         if(nodeId!==null&&!this.routeIndex.has(nodeId))throw new Error('That moment is not on the current story path.');
-        const target=nodeId===null?-1:this.routeIndex.get(nodeId);
-        this.reset();this.started=true;
-        // Replay session state through the selected moment. This also gives future
-        // choices/variables one consistent place to restore their earlier state.
-        for(let index=0;index<=target;index++)this.advance();
+        const target=nodeId===null?-1:this.routeIndex.get(nodeId),route=this.route;
+        const decisions=new Map(route.slice(0,target+1).filter(node=>node.type==='choice'&&node.id!==nodeId&&this.decisions.has(node.id)).map(node=>[node.id,this.decisions.get(node.id)]));
+        this.reset(decisions);this.started=true;
+        for(let index=0;index<=target;index++) {
+          if(index===target&&route[index].type==='choice')break;
+          this.advance();
+        }
       }
     }
 
     let story=null, engine=null, playing=false, timer=null, timerGeneration=0, readGeneration=0, resumeOnVisible=false;
     let viewedChatId=null, followActive=true, typingSender=null, ownerWaiting=false, sendLocked=false, newestMessageId=null;
     let renderedChatId=null, renderedMessageCount=0, headerAvatarKey='';
-    let overviewOpen=false, pendingChatId=null, chatListKey='';
+    let overviewOpen=false, pendingChatId=null, chatListKey='', replyOptionsKey='';
     const unreadCounts=new Map(), chatActivity=new Map();
     const historyScrolls=new Map();
-    const TIMELINE_STEP=84, TIMELINE_MARGIN=24, TIMELINE_LANE=270, TIMELINE_MIN_ZOOM=.02, TIMELINE_MAX_ZOOM=2;
+    const TIMELINE_STEP=84, TIMELINE_MARGIN=24, TIMELINE_LANE=220, TIMELINE_MIN_ZOOM=.02, TIMELINE_MAX_ZOOM=2;
     let timelineModel=null, timelineView=null, timelineSelection=null, timelineFollow=true, timelineFrame=null, timelineViewportKey='', timelineZoom=1, timelineOffset=0, timelineTop=0;
     let scrollPan=null, suppressPanClick=false;
     const nameFor = id => story?.characters.get(id)?.name || 'Unknown';
@@ -458,7 +502,7 @@
     // Layout uses graph links, independently of playback order. Forks get separate
     // lanes and merges sit below their parents; v1 stories still supply one path.
     function layoutTimelineGraph(items,connections) {
-      const moments=items.map((item,index)=>({...item,index,w:['start','end'].includes(item.kind)?100:item.kind==='timestamp'?200:240,h:['start','end','timestamp'].includes(item.kind)?34:56,rank:0}));
+      const moments=items.map((item,index)=>({...item,index,w:['start','end'].includes(item.kind)?100:item.kind==='timestamp'?160:180,h:['start','end','timestamp'].includes(item.kind)?34:56,rank:0}));
       const byId=new Map(moments.map(moment=>[moment.id,moment])),parents=new Map(moments.map(moment=>[moment.id,[]]));
       if(byId.size!==moments.length)throw new Error('Timeline IDs must be unique.');
       const links=new Map(moments.map(moment=>[moment.id,[...new Set(connections.get(moment.id)||[])]]));
@@ -502,11 +546,12 @@
       const chatColors=new Map(Array.from(session.story.chats.keys(),(id,index)=>[id,colors[index%colors.length]]));
       const moments=[{id:null,node:null,count:0,kind:'start',color:'#8592a5',title:'Beginning',text:''}];
       let count=0,visit=0;
-      for(const node of session.route) {
+      for(const node of session.story.branching?reachableStoryNodes(session.story):session.route) {
         const chat=node.chatId?session.story.chats.get(node.chatId):null;
         if(node.type==='message')count++;
         let title='End',text='';
         if(node.type==='chat'){title=`${++visit}. ${headerLabel(chat)}`;text=`As ${nameFor(chat.ownerId)}`;}
+        else if(node.type==='choice'){title='Choose a reply';text=node.options.map(option=>option.text).join(' / ');}
         else if(node.type==='message') {
           const sender=nameFor(node.message.sender),label=headerLabel(chat);
           title=node.message.type==='timestamp'?node.message.content:label===sender?sender:`${label} · ${sender}`;
@@ -514,7 +559,7 @@
         }
         moments.push({id:node.id,node,count,kind:node.type==='message'?node.message.type:node.type,color:chat?chatColors.get(chat.id):'#8592a5',title:title.slice(0,350),text:text.slice(0,350)});
       }
-      const connections=new Map(moments.map(moment=>[moment.id,(moment.node?[nextStoryNodeId(moment.node)]:[session.story.startNodeId]).filter(id=>id!==null)]));
+      const connections=new Map(moments.map(moment=>[moment.id,moment.node?storyNodeTargets(moment.node):[session.story.startNodeId]]));
       const model={route:session.route,...layoutTimelineGraph(moments,connections)};
       return Object.assign(model,groupTimelineVisits(model));
     }
@@ -539,15 +584,33 @@
       }
       return {segments,segmentByMoment,segmentById:new Map(segments.map(segment=>[segment.id,segment]))};
     }
+    function timelineOverview(model) {
+      if(model.overview)return model.overview;
+      const incoming=new Map(model.moments.map(moment=>[moment.id,0]));
+      for(const edge of model.edges)incoming.set(edge.to.id,incoming.get(edge.to.id)+1);
+      const landmarks=new Set(model.moments.filter(moment=>moment.kind==='choice'||moment.kind==='start'||moment.kind==='end'
+        ||incoming.get(moment.id)!==1||model.connections.get(moment.id).length!==1).map(moment=>moment.id));
+      const edges=[];
+      for(const id of landmarks)for(const next of model.connections.get(id)) {
+        let target=next;
+        while(!landmarks.has(target))target=model.connections.get(target)[0];
+        edges.push({from:model.byId.get(id),to:model.byId.get(target),next});
+      }
+      // Keep joins as line junctions while omitting the messages between decisions.
+      return model.overview={edges,ranks:[...new Set([...landmarks].map(id=>model.byId.get(id).rank))].sort((a,b)=>a-b)};
+    }
     function projectTimeline(model,zoom) {
-      const detail=zoom>=.7?'cards':zoom>=.25?'dots':'chats',compact=detail!=='cards';
-      const scaleX=compact?Math.max(.8,zoom):zoom;
+      const detail=zoom>=.7?'cards':zoom>=.25?'dots':zoom>=.08?'chats':'choices',compact=detail!=='cards';
+      const markerScale=detail==='choices'?Math.sqrt(zoom/.08):detail==='chats'?Math.sqrt(zoom/.25):1;
+      const scaleX=zoom<.25?.8*Math.sqrt(zoom/.25):compact?Math.max(.8,zoom):zoom;
+      const overview=detail==='choices'?timelineOverview(model):null;
       const moments=model.moments.map(source=>{
         let display=compact?(source.node?.type==='message'?'dot':'label'):'card';
         const segment=model.segmentByMoment.get(source.id);
         if(detail==='chats'&&segment)display=source===segment.first?'segment':source===segment.last?'dot':'hidden';
-        const w=display==='card'?source.w*zoom:display==='dot'||display==='hidden'?26:['start','end'].includes(source.kind)?100:190;
-        const h=display==='card'?source.h*zoom:display==='hidden'?0:display==='dot'?18:display==='segment'?40:28;
+        if(overview)display=source.kind==='choice'?'decision':['start','end'].includes(source.kind)||!model.connections.get(source.id).length?'dot':'hidden';
+        const w=display==='card'?source.w*zoom:display==='decision'?80*markerScale:display==='dot'||display==='hidden'?26:(['start','end'].includes(source.kind)?100:146)*markerScale;
+        const h=display==='card'?source.h*zoom:display==='hidden'?0:display==='dot'?18:display==='decision'?Math.max(20,28*markerScale):Math.max(20,(display==='segment'?40:28)*markerScale);
         return {source,id:source.id,index:source.index,rank:source.rank,x:source.x*scaleX,y:0,w,h,display};
       });
       const byId=new Map(moments.map(moment=>[moment.id,moment])),heights=Array(model.levels.size).fill(0),gaps=Array(model.levels.size).fill(0),ys=[];
@@ -557,17 +620,23 @@
         let gap=TIMELINE_STEP*zoom;
         if(detail==='chats') {
           const segment=model.segmentByMoment.get(from.id);
-          gap=segment&&segment===model.segmentByMoment.get(to.id)?Math.min(gap,Math.max(36,110*Math.sqrt(zoom/.25))/Math.max(1,segment.last.rank-segment.first.rank)):Math.max(44,gap);
+          gap=segment&&segment===model.segmentByMoment.get(to.id)?Math.min(gap,110*markerScale/Math.max(1,segment.last.rank-segment.first.rank)):Math.max(44*markerScale,gap);
         }
         gaps[to.rank]=Math.max(gaps[to.rank],gap);
       }
       ys[0]=TIMELINE_MARGIN+heights[0]/2;
-      for(let rank=1;rank<heights.length;rank++)ys[rank]=ys[rank-1]+Math.max(gaps[rank],(heights[rank-1]+heights[rank])/2+(heights[rank-1]||heights[rank]?8:0));
+      if(overview) {
+        for(let index=1;index<overview.ranks.length;index++) {
+          const previous=overview.ranks[index-1],next=overview.ranks[index];
+          const distance=(heights[previous]+heights[next])/2+56*markerScale;
+          for(let rank=previous+1;rank<=next;rank++)ys[rank]=ys[previous]+distance*(rank-previous)/(next-previous);
+        }
+      } else for(let rank=1;rank<heights.length;rank++)ys[rank]=ys[rank-1]+Math.max(gaps[rank],(heights[rank-1]+heights[rank])/2+(heights[rank-1]||heights[rank]?8*markerScale:0));
       let left=Infinity,right=-Infinity;
       for(const moment of moments){moment.y=ys[moment.rank];left=Math.min(left,moment.x-moment.w/2);right=Math.max(right,moment.x+moment.w/2);}
       const shiftX=TIMELINE_MARGIN-left;
       for(const moment of moments)moment.x+=shiftX;
-      return {model,zoom,scaleX,detail,moments,byId,ys,shiftX,width:right-left+2*TIMELINE_MARGIN,height:ys.at(-1)+heights.at(-1)/2+TIMELINE_MARGIN};
+      return {model,zoom,scaleX,markerScale,detail,moments,byId,ys,shiftX,edges:overview?.edges||model.edges,width:right-left+2*TIMELINE_MARGIN,height:ys.at(-1)+heights.at(-1)/2+TIMELINE_MARGIN};
     }
     function timelineYAtRank(view,rank) {
       const last=view.ys.length-1;
@@ -583,7 +652,7 @@
       while(high-low>1){const mid=(low+high)>>1;if(ys[mid]<=y)low=mid;else high=mid;}
       return low+(y-ys[low])/(ys[high]-ys[low]);
     }
-    function currentTimelineId() { return engine.visitedNodeIds.at(-1)??null; }
+    function currentTimelineId() { return engine.current()?.type==='choice'?engine.current().id:engine.visitedNodeIds.at(-1)??null; }
     function openTimeline() {
       if(!engine)return;
       closeControls();$('timeline-panel').hidden=false;document.body.classList.add('timeline-open');$('timeline-button').setAttribute('aria-expanded','true');
@@ -647,22 +716,26 @@
       const svg=$('timeline-links'),svgLeft=Math.max(0,left),svgWidth=right-svgLeft,svgHeight=bottom-top;
       Object.assign(svg.style,{left:`${svgLeft}px`,top:`${top}px`,width:`${svgWidth}px`,height:`${svgHeight}px`});svg.setAttribute('viewBox',`${svgLeft} ${top} ${svgWidth} ${svgHeight}`);
       const svgNodes=[];
-      const drawLine=(from,to,color,width=2)=>{
-        if(to.y<top||from.y>bottom||Math.max(from.x,to.x)<left||Math.min(from.x,to.x)>right)return;
+      const drawLine=(from,to,color,width=2,via=null)=>{
+        if(to.y<top||from.y>bottom||Math.max(from.x,to.x,via?.x??from.x)<left||Math.min(from.x,to.x,via?.x??from.x)>right)return;
         const line=document.createElementNS('http://www.w3.org/2000/svg','path'),start=from.y+from.h/2,end=to.y-to.h/2,mid=(start+end)/2;
-        line.setAttribute('d',`M${from.x} ${start}C${from.x} ${mid} ${to.x} ${mid} ${to.x} ${end}`);line.setAttribute('stroke',color);line.setAttribute('stroke-width',width);line.setAttribute('stroke-linecap','round');line.setAttribute('fill','none');svgNodes.push(line);
+        const path=via?`M${from.x} ${start}C${from.x} ${(start+mid)/2} ${via.x} ${(start+mid)/2} ${via.x} ${mid}C${via.x} ${(mid+end)/2} ${to.x} ${(mid+end)/2} ${to.x} ${end}`
+          :`M${from.x} ${start}C${from.x} ${mid} ${to.x} ${mid} ${to.x} ${end}`;
+        line.setAttribute('d',path);line.setAttribute('stroke',color);line.setAttribute('stroke-width',width);line.setAttribute('stroke-linecap','round');line.setAttribute('fill','none');svgNodes.push(line);
       };
-      for(const {from,to} of model.edges) {
+      for(const {from,to,next} of view.edges) {
         if(view.detail==='chats'&&model.segmentByMoment.has(from.id)&&model.segmentByMoment.get(from.id)===model.segmentByMoment.get(to.id))continue;
-        drawLine(view.byId.get(from.id),view.byId.get(to.id),'#c4cfdf');
+        const target=next??to.id;
+        const active=from.id===null?target===story.startNodeId:engine.routeIndex.has(from.id)&&nextStoryNodeId(from.node,engine.decisions)===target;
+        drawLine(view.byId.get(from.id),view.byId.get(to.id),story.branching&&active?'#83abf7':'#c4cfdf',2,view.detail==='choices'&&target!==to.id?view.byId.get(target):null);
       }
       const visibleSegments=[];
       if(view.detail==='chats')for(const segment of model.segments) {
         const first=view.byId.get(segment.first.id),last=view.byId.get(segment.last.id);
         if(first===last||last.y<top||first.y>bottom||first.x<left||first.x>right)continue;
         drawLine(first,last,`${segment.first.color}80`,4);visibleSegments.push(segment);
-        const played=model.byId.get(current);
-        if(played&&played.index>=segment.first.index){const end=played.index>=segment.last.index?last:view.byId.get(played.id);if(model.segmentByMoment.get(end.id)===segment)drawLine(first,{...end,h:0},segment.first.color,4);}
+        const played=story.branching?segment.moments.filter(moment=>engine.visitedNodeIds.includes(moment.id)).at(-1):model.byId.get(current);
+        if(played&&(story.branching||played.index>=segment.first.index)){const end=story.branching?view.byId.get(played.id):played.index>=segment.last.index?last:view.byId.get(played.id);if(model.segmentByMoment.get(end.id)===segment)drawLine(first,{...end,h:0},segment.first.color,4);}
       }
       svg.replaceChildren(...svgNodes);
       const visible=[];
@@ -671,7 +744,7 @@
         let moment=view.byId.get(source.id);
         if(moment.display==='hidden') {
           if(source.id!==current&&source.id!==timelineSelection)continue;
-          moment={...moment,display:'dot',h:18};
+          moment={...moment,display:'dot',w:26,h:18};
         }
         if(moment.x+moment.w/2>=left&&moment.x-moment.w/2<=right)visible.push(moment);
       }
@@ -684,15 +757,16 @@
           const source=moment.source,segment=model.segmentByMoment.get(source.id);
           const button=element('button','timeline-node');button.type='button';button.dataset.timelineIndex=moment.index;button.dataset.kind=source.kind;button.dataset.detail=moment.display;
           Object.assign(button.style,{left:`${moment.x-moment.w/2}px`,top:`${moment.y-moment.h/2}px`,width:`${moment.w}px`,height:`${moment.h}px`});
-          button.style.setProperty('--moment-color',source.color);button.style.setProperty('--moment-tint',`${source.color}0a`);button.style.setProperty('--text-scale',view.detail==='cards'?view.zoom:1);
+          button.style.setProperty('--moment-color',source.color);button.style.setProperty('--moment-tint',`${source.color}0a`);button.style.setProperty('--text-scale',view.detail==='cards'?view.zoom:Math.max(.8,view.markerScale));
           if(moment.display==='card'){button.style.padding=`${8*view.zoom}px ${11*view.zoom}px`;button.style.gap=`${4*view.zoom}px`;}
+          else if(['label','segment'].includes(moment.display)){button.style.padding=`${5*view.markerScale}px ${8*view.markerScale}px`;button.style.gap=`${2*view.markerScale}px`;}
           button.title=`${source.title}${source.text?`: ${source.text}`:''}`;button.setAttribute('aria-label',`Jump to ${source.title}. ${source.text}`);
           if(moment.display==='segment') {
             const chat=story.chats.get(segment.chatId),label=headerLabel(chat),count=`${segment.count} message${segment.count===1?'':'s'}`;
             button.dataset.timelineSegment=segment.id;button.title=`Zoom into ${label}, ${count}`;button.setAttribute('aria-label',button.title);
             button.append(element('strong','',source.kind==='chat'?source.title:label),element('span','',count));button.addEventListener('click',()=>zoomTimelineVisit(segment.id));
           } else {
-            if(moment.display!=='dot'){button.appendChild(element('strong','',source.title));if(moment.display==='card'&&source.text)button.appendChild(element('span','',source.text));}
+            if(moment.display!=='dot'){button.appendChild(element('strong','',moment.display==='decision'?'Choice':source.title));if(moment.display==='card'&&source.text)button.appendChild(element('span','',source.text));}
             button.addEventListener('click',()=>seekStory(moment.id));
           }
           points.push(button);
@@ -710,7 +784,10 @@
       }
       $('timeline-points').querySelectorAll('button').forEach(button=>{
         const moment=model.moments[Number(button.dataset.timelineIndex)],isCurrent=moment.id===current;
-        button.classList.toggle('played',moment.index<=engine.visitedNodeIds.length);button.classList.toggle('current',isCurrent);button.classList.toggle('selected',moment.id===timelineSelection);
+        button.classList.toggle('played',moment.id===null||engine.visitedNodeIds.includes(moment.id));button.classList.toggle('current',isCurrent);button.classList.toggle('selected',moment.id===timelineSelection);
+        const unexplored=moment.id!==null&&!engine.routeIndex.has(moment.id);
+        button.classList.toggle('unexplored',unexplored);
+        button.setAttribute('aria-disabled',String(unexplored&&button.dataset.detail!=='segment'));
         button.classList.toggle('active-segment',button.dataset.detail==='segment'&&model.segmentByMoment.get(current)===model.segmentByMoment.get(moment.id));
         if(isCurrent)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
       });
@@ -829,6 +906,7 @@
     // Leading timestamps do not decide whether a new block should open automatically.
     function firstChatMessage(node,chatId) {
       while(node&&node.type!=='end'&&node.chatId===chatId){
+        if(node.type==='choice')return {sender:story.chats.get(chatId).ownerId};
         if(node.type==='message'&&node.message.type!=='timestamp')return node.message;
         node=node.next===null?null:story.nodes.get(node.next);
       }
@@ -843,16 +921,20 @@
     function render() {
       if (!engine) return;
       const chat=previewChat(), active=engine.chat(), ownerTurn=ownerWaiting && playing && !sendLocked && !pendingChatId;
-      const complete=engine.finished&&!pendingChatId, needsOpen=playing&&(!!pendingChatId||(ownerTurn&&!isChatVisible(active.id)));
+      const choice=engine.current()?.type==='choice'?engine.current():null;
+      const complete=engine.finished&&!pendingChatId, needsOpen=playing&&(!!pendingChatId||((ownerTurn||choice)&&active&&!isChatVisible(active.id)));
       $('story-title').textContent=story.story.title;
-      $('story-description').textContent=`${story.chats.size} ${story.chats.size===1?'chat':'chats'} · ${story.messageCount} messages`;
+      $('story-description').textContent=`${story.chats.size} ${story.chats.size===1?'chat':'chats'} · ${story.branching?'Interactive story':`${story.messageCount} messages`}`;
       $('playback-paused').disabled=complete;
       $('playback-paused').checked=!playing&&!complete;
       $('restart-button').disabled=!engine.started;
       $('playing-as').textContent=active?`As ${nameFor(active.ownerId)}`:'Ready';
-      $('progress-label').textContent=`${engine.messageCount} / ${story.messageCount} messages`;
-      const progress=Math.round(engine.messageCount/story.messageCount*100); $('progress-fill').style.width=`${progress}%`; $('progress').setAttribute('aria-valuenow',progress);
-      const status=!engine.started?'Ready.':complete?'Complete.':!playing?'Paused.':pendingChatId?'Open the new message.':ownerTurn?'Your turn.':typingSender?`${typingSender} is typing…`:'Playing…';
+      $('progress-label').textContent=story.branching?`${engine.messageCount} messages${complete?' · Complete':''}`:`${engine.messageCount} / ${story.messageCount} messages`;
+      const progress=story.branching?(complete?100:null):Math.round(engine.messageCount/story.messageCount*100);
+      $('progress-fill').style.width=`${progress??0}%`;
+      if(progress===null)$('progress').removeAttribute('aria-valuenow');else $('progress').setAttribute('aria-valuenow',progress);
+      $('progress').setAttribute('aria-valuetext',story.branching?`${engine.messageCount} messages played${complete?', complete':', length depends on choices'}`:`${progress}%`);
+      const status=!engine.started?'Ready.':complete?'Complete.':!playing?'Paused.':pendingChatId?'Open the new message.':choice?(engine.isOwnerTurn()?'Send your reply.':'Choose a reply.'):ownerTurn?'Your turn.':typingSender?`${typingSender} is typing…`:'Playing…';
       $('playback-status').textContent=status;
       $('phone-session').hidden=false;
       $('phone-play-button').hidden=!complete&&!needsOpen;
@@ -867,12 +949,13 @@
       renderChatOverview();
       renderTimeline();
       const browsing=overviewOpen || (!!active && chat?.id!==active.id);
+      renderReplyOptions(choice,browsing);
       $('send-button').disabled=!ownerTurn;
       $('send-button').title=browsing?'Return to the current chat':'Send next message (Enter)';
       $('send-button').setAttribute('aria-label',browsing?'Return to the current chat':'Send next message');
-      const draft=ownerTurn && !browsing?engine.current().message:null;
+      const draft=ownerTurn && !browsing?engine.preparedReply()?.message:null;
       $('scripted-message').value=draft?(draft.type==='text'?draft.content:draft.type==='image-placeholder'?`[Image: ${draft.content}]`:'[Image]'):'';
-      $('scripted-message').placeholder=browsing?'Viewing history':pendingChatId?'New message':complete?'Complete':!engine.started?'Message':!playing?'Paused':typingSender?'Waiting…':'Message';
+      $('scripted-message').placeholder=browsing?'Viewing history':pendingChatId?'New message':complete?'Complete':!engine.started?'Message':!playing?'Paused':choice?'Choose a reply':typingSender?'Waiting…':'Message';
       $('scripted-message').rows=draft?Math.min(4,Math.max(1,draft.content.split('\n').length,Math.ceil(draft.content.length/45))):1;
       if(!chat)return;
       document.documentElement.style.setProperty('--phone-width',`${chat.settings.screenWidth}px`);
@@ -917,6 +1000,29 @@
       newestMessageId=null;
     }
     function clearTimer() { clearTimeout(timer);timer=null;timerGeneration++;typingSender=null;ownerWaiting=false;sendLocked=false; }
+    function renderReplyOptions(choice,browsing) {
+      const holder=$('reply-options');holder.hidden=!choice||browsing||!!pendingChatId;
+      if(!choice){holder.replaceChildren();replyOptionsKey='';return;}
+      const key=JSON.stringify([choice.id,choice.options]);
+      if(replyOptionsKey!==key) {
+        replyOptionsKey=key;
+        holder.replaceChildren(...choice.options.map(option=>{
+          const button=element('button','reply-option',option.text);button.type='button';button.dataset.choiceOption=option.id;
+          button.addEventListener('click',()=>chooseStoryOption(option.id));return button;
+        }));
+      }
+      holder.querySelectorAll('button').forEach(button=>{
+        button.disabled=!playing||sendLocked||!!pendingChatId;
+        button.setAttribute('aria-pressed',String(engine.decisions.get(choice.id)===button.dataset.choiceOption));
+      });
+    }
+    function chooseStoryOption(optionId) {
+      if(!engine||!playing||pendingChatId||sendLocked||engine.current()?.type!=='choice')return false;
+      if(!engine.current().options.some(option=>option.id===optionId))return false;
+      clearTimer();
+      if(!engine.choose(optionId))return false;
+      ownerWaiting=true;render();$('scripted-message').focus({preventScroll:true});return true;
+    }
     function schedule(delay,callback) { const generation=timerGeneration;timer=setTimeout(()=>{timer=null;if(generation!==timerGeneration || !playing)return;callback();},delay); }
     function pause() { clearTimer();playing=false;render(); }
     function pump() {
@@ -924,7 +1030,8 @@
       const node=engine.current();
       if(!node){engine.finished=true;playing=false;render();return;}
       const speed=Number($('speed').value);
-      if(node.type==='message')activatePlaybackChat(node.chatId);
+      if(node.type==='message'||node.type==='choice')activatePlaybackChat(node.chatId);
+      if(node.type==='choice') {ownerWaiting=engine.isOwnerTurn();typingSender=null;render();return;}
       if(node.type==='message' && engine.isOwnerTurn()) {
         ownerWaiting=true;typingSender=null;render();return;
       }
@@ -958,6 +1065,7 @@
       if(!engine || !playing || pendingChatId || !ownerWaiting || sendLocked || !engine.isOwnerTurn())return;
       if(!isChatVisible(engine.activeChatId)){openChat(engine.activeChatId);return;}
       followActive=true;viewedChatId=engine.current().chatId;ownerWaiting=false;sendLocked=true;
+      if(engine.current().type==='choice')engine.advance();
       const visited=engine.advance();newestMessageId=visited.message.id;chatActivity.set(visited.chatId,engine.visitedNodeIds.length);render();
       if(engine.finished){playing=false;sendLocked=false;render();return;}
       schedule(Math.max(350,500/Number($('speed').value)),()=>{sendLocked=false;pump();});
@@ -982,6 +1090,27 @@
       const records=[['chat','sarah'],['message','sarah','timestamp',null,'Friday, 4:30 PM'],['message','sarah','text','sarah','Still up for a movie tonight?'],['message','sarah','text','user',"Definitely! Let me check with Max."],['chat','max'],['message','max','text','user','Movie night with Sarah?'],['message','max','text','max',"Count me in. I'll bring snacks."],['chat','friends'],['message','friends','text','max',"Does User know we're getting popcorn first?"],['message','friends','text','sarah',"Not yet. Let's put it in the group."],['chat','group'],['message','group','text','max','Snacks before the movie?'],['message','group','text','sarah','Only if there is popcorn!'],['message','group','image-placeholder','user','A cinema with a café next door'],['message','group','text','user','Found the perfect place. See you at 6:30!'],['chat','sarah'],['message','sarah','text','sarah',"Tickets are booked. This is going to be fun."],['end']];
       data.nodes=records.map((record,index)=>{const node={id:`step-${index}`,type:record[0]};if(node.type==='end')return node;node.chatId=record[1];node.next=`step-${index+1}`;if(node.type==='message')node.message={id:`message-${index}`,type:record[2],sender:record[3],content:record[4],altText:''};return node;});
       return data;
+    }
+    function branchingExampleStory() {
+      const data=exampleStory();data.version=2;data.story={id:'evening-invitation',title:'The invitation'};data.chats=data.chats.filter(chat=>['sarah','friends'].includes(chat.id));data.startNodeId='demo-intro';
+      const message=(id,chatId,sender,content,next)=>({id,type:'message',chatId,message:{id:`message:${id}`,type:'text',sender,content,altText:''},next});
+      data.nodes=[
+        {id:'demo-intro',type:'chat',chatId:'sarah',next:'demo-question'},
+        message('demo-question','sarah','sarah','Can you meet me tonight?','demo-invitation'),
+        {id:'demo-invitation',type:'choice',chatId:'sarah',options:[
+          {id:'meet',text:'Yes. Where?',next:'demo-yes-reply'},
+          {id:'stay-home',text:"Sorry, I can't.",next:'demo-no-reply'}]},
+        message('demo-yes-reply','sarah','user','Yes. Where?','demo-meet'),
+        {id:'demo-meet',type:'chat',chatId:'sarah',next:'demo-meet-reaction',status:{time:'18:00',battery:85}},
+        message('demo-meet-reaction','sarah','sarah',"At the station. Eight o'clock.",'demo-joined'),
+        message('demo-no-reply','sarah','user',"Sorry, I can't.",'demo-home'),
+        {id:'demo-home',type:'chat',chatId:'sarah',next:'demo-home-reaction',status:{time:'18:30',battery:80}},
+        message('demo-home-reaction','sarah','sarah','Okay. Keep your phone nearby.','demo-joined'),
+        {id:'demo-joined',type:'chat',chatId:'friends',next:'demo-max'},
+        message('demo-max','friends','max','Did you hear back from User?','demo-sarah'),
+        message('demo-sarah','friends','sarah',"Yes. I'll send you the details.",'demo-end'),
+        {id:'demo-end',type:'end'}
+      ];return data;
     }
     setupDragScrolling();
     $('controls-toggle').addEventListener('click',openControls);
@@ -1011,9 +1140,10 @@
     $('timeline-viewport').addEventListener('keydown',event=>{
       if(!timelineModel||event.altKey||event.ctrlKey||event.metaKey)return;
       const focused=event.target.closest('[data-timeline-index]'),index=focused?Number(focused.dataset.timelineIndex):timelineModel.byId.get(timelineSelection).index;
+      const stops=timelineView.detail==='choices'?timelineView.moments.filter(moment=>moment.display!=='hidden').map(moment=>moment.index):null;
       let target;
-      if(event.key==='ArrowDown')target=Math.min(timelineModel.moments.length-1,index+1);
-      else if(event.key==='ArrowUp')target=Math.max(0,index-1);
+      if(event.key==='ArrowDown')target=stops?stops.find(value=>value>index)??stops.at(-1):Math.min(timelineModel.moments.length-1,index+1);
+      else if(event.key==='ArrowUp')target=stops?stops.findLast(value=>value<index)??stops[0]:Math.max(0,index-1);
       else if(event.key==='Home')target=0;
       else if(event.key==='End')target=timelineModel.moments.length-1;
       else if(event.key==='Enter'){event.preventDefault();if(!event.repeat){if(focused?.dataset.timelineSegment)zoomTimelineVisit(focused.dataset.timelineSegment);else seekStory(timelineModel.moments[index].id);}return;}
@@ -1027,8 +1157,9 @@
     for(const id of ['open-button','phone-open-button'])$(id).addEventListener('click',()=>$('story-file').click());
     $('story-file').addEventListener('change',event=>{openFile(event.target.files?.[0]);event.target.value='';});
     for(const id of ['example-button','phone-example-button'])$(id).addEventListener('click',()=>{readGeneration++;loadStory(exampleStory());});
+    for(const id of ['branching-example-button','phone-branching-example-button'])$(id).addEventListener('click',()=>{readGeneration++;loadStory(branchingExampleStory());});
     $('playback-paused').addEventListener('change',event=>{resumeOnVisible=false;if(event.target.checked)pause();else play({closePanel:false});});
-    $('phone-play-button').addEventListener('click',event=>{if(event.detail>1)return;if(playing&&(pendingChatId||ownerWaiting))openChat(pendingChatId||engine.activeChatId);else play();});
+    $('phone-play-button').addEventListener('click',event=>{if(event.detail>1)return;if(playing&&(pendingChatId||ownerWaiting||engine.current()?.type==='choice'))openChat(pendingChatId||engine.activeChatId);else play();});
     $('chat-back').addEventListener('click',showChatOverview);
     $('show-chats-button').addEventListener('click',showChatOverview);
     $('overview-current').addEventListener('click',()=>openChat(engine?.activeChatId||viewedChatId));
