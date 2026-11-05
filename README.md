@@ -1,63 +1,63 @@
 # Chat Story Generator
 
-[Open the app](https://nastinax.github.io/chat/)
+[Open the generator](https://nastinax.github.io/chat/) · [Open the player](player.html)
 
-Create fictional, iMessage-style conversations with a live preview. Write a script, edit messages directly in the phone preview, and export a single image or an ordered set of screenshots.
+Create fictional chat stories with private and group conversations. Write a script or edit the phone preview, then export screenshots, continuous chat images, or an interactive playback file.
 
-The app runs in your browser from a single HTML file. No build step or account is required.
+Both apps are standalone HTML files. No account or build step is required.
 
-<img width="1440" height="1000" alt="editor" src="https://github.com/user-attachments/assets/d3256bd1-376f-4669-9fbf-aa5b59b3267a" />
+<img width="1440" height="1000" alt="Story editor and live phone preview" src="https://github.com/user-attachments/assets/d3256bd1-376f-4669-9fbf-aa5b59b3267a" />
 
 ## Get started
 
-1. Download or clone this repository.
-2. Open **[index.html](index.html)** in a modern browser.
-3. Click **Load example** to explore a movie-night story with private chats, group chats, timestamps, and images.
-4. Edit the story using **Messages**, **Script**, or the preview itself.
+1. Download or clone this repository and open [index.html](index.html) in a modern browser.
+2. Click **Load example** to explore private chats, groups, timestamps, and images.
+3. Edit through **Messages**, **Script**, or the preview.
 
-An internet connection is needed to load the styles, icons, fonts, and image export library from CDNs.
+The generator loads Tailwind CSS, Font Awesome, Inter, and dom-to-image from CDNs, so it needs an internet connection. The [player](player.html) works offline with embedded images; external image URLs still need their host.
 
-You can also serve the folder locally if Python is installed:
+To serve the folder locally with Python:
 
 ```sh
 python -m http.server 8000
 ```
 
-Then open [localhost:8000](http://localhost:8000). Keep using the same address to return to your saved stories; browser storage is tied to the page's location.
+Open [localhost:8000](http://localhost:8000). Keep using the same browser and address to access your saved stories.
 
-## Choose how to edit
+## Edit a story
 
-| Mode | How it works |
+| Editor | Use it to… |
 | --- | --- |
-| **Messages** | Add text, images, or timestamps with a form. Search, filter, reorder, or use the eye icon to locate a message in the preview. |
-| **Script** | Write conversations as text, then click **Apply script** to update the chats. |
-| **Edit in preview** | Type into the phone's input and choose a sender below it. Enabled by default; turn it off in the Preview controls when you want a clean preview. |
+| **Messages** | Add text, images, and timestamps; search, filter, reorder, or locate messages with the eye icon. |
+| **Script** | Write conversations as text, then click **Apply script**. |
+| **Edit in preview** | Type into each phone and choose a sender below it. On by default; toggle it in Preview controls. |
 
-When editing in the preview:
+Preview controls:
 
-- **Enter** adds a message; **Shift+Enter** adds a new line.
-- **Double-click** a message to edit it.
-- Drag its handle **up or down** to reorder it, or **left or right** to change its sender. Drop it on a character button to choose that sender.
-- **Right-click** or click **⋯** for editing, duplication, insertion, sender, and deletion options.
-- Use **+ Character**, **+ Timestamp**, or the camera icon to add more content.
-- The subtle **down arrow** jumps to the visible chat's input in longer conversations.
+- **Enter** sends; **Shift+Enter** adds a line. The camera adds images; the clock adds timestamps.
+- **Double-click** a message to edit. The editor can change its sender or type: text, image, or timestamp.
+- Hover briefly over a bubble, or tap it on touchscreens, to reveal its controls. **Change image** replaces an image in place.
+- Drag a message's handle up/down to reorder, left/right to change sender, or onto a character button to assign it. Holding a bubble still for half a second also starts dragging.
+- **Right-click** or **⋯** opens insertion, duplication, sender, and deletion options. **Insert above/below** uses the same message editor.
+- **Save** or **Ctrl/Cmd+Enter** applies message edits. Click outside or press **Esc** to close a pop-up.
 
-Preview edits also update the script. Apply any pending script edits before continuing to edit in the preview.
+Drag the conversation or empty preview space to scroll; touchscreens support swipes. A down arrow appears in long chats to reach the input. Use **+ Character** below a phone to add a participant.
 
-The small sidebar button at the top-left collapses the editor. Click it again, or press **Esc**, to reopen it.
+Preview edits update the script. Apply pending script edits before editing in the preview or exporting. **Undo/Redo** reverses changes; **Ctrl/Cmd+Z** and **Ctrl/Cmd+Shift+Z** work outside text fields.
 
-## Write a script
+The sidebar button at the top-left collapses the editor. Click again, or press **Esc**, to reopen it.
 
-Start a conversation with `[Chat: Name / Name]`, then prefix each message with its sender's name. List three or more people for a group chat.
+## Script syntax
+
+Start a block with `[Chat: Name / Name]`. List three or more participants for a group, then prefix messages with their sender:
 
 ```text
 [Chat: User / Sarah]
 [Phone owner: User]
 Time: Friday, 4:30 PM
 Sarah: Still up for a movie tonight?
-User: Definitely! I'll check with Max.
-Sarah: Meet at the station.
   I'll bring the tickets.
+User: I'll check with Max.
 
 [Chat: User / Max]
 [Phone owner: User]
@@ -73,39 +73,29 @@ Max: I'll suggest it in the group.
 [Phone owner: User]
 Max: Snacks before the movie?
 Sarah: Only if there's popcorn!
-User: I found the perfect place.
 User: [img:A cinema entrance with a café next door]
 
 [Chat: User / Sarah]
 [Phone owner: User]
 User: See you at 6:30!
-Sarah: See you there!
 ```
 
-**Phone owner** determines whose messages appear on the right. Other participants appear on the left; group chats identify their senders. The owner must be a participant and must stay the same across repeated blocks of that chat.
+**Phone owner** identifies the person whose messages appear on the right. The owner must belong to the chat and stay the same across its blocks. Others appear on the left, with sender names in groups.
 
-Repeat a chat header to return to that conversation later in the story. Chats are matched by their participants, regardless of their order in the header. Adding another participant creates a different chat, so `[Chat: User / Sarah / Max / Alex]` can follow the three-person group.
-
-New names create shared characters automatically. A character's name and avatar are reused wherever that character appears in the story.
-
-### Timestamps, images, and multiline messages
+Repeat a chat header to return to it later. Participant order does not matter; changing the participant set creates a different chat. New names create shared characters whose names and avatars carry across chats.
 
 | Syntax | Result |
 | --- | --- |
-| `Sarah: Hello!` | A text message from Sarah. |
-| `Time: Friday, 4:30 PM` | A centered timestamp with no sender. |
-| `Sarah: [img:A beach at sunset]` | An image placeholder showing the description. |
-| A continuation indented by two spaces | A new line within the preceding message. |
+| `Sarah: Hello!` | Text from Sarah. |
+| `Time: Friday, 4:30 PM` | A centered timestamp. |
+| `Sarah: [img:A beach at sunset]` | An image placeholder. |
+| `Sarah: [img:https://example.com/photo.jpg\|alt:A beach]` | An image URL with optional description. |
+| Two spaces before a continuation line | A new line in the preceding message. |
+| `Sarah: \[img:This is text]` | Literal text beginning with image syntax. |
 
-For an actual image, upload a file through **Messages** or the preview's camera button. You can also use an image URL, with optional alt text:
+Upload real images through Messages or the preview. Descriptions create placeholders; they do not generate images. Uploads are included in JSON backups; external URLs remain external.
 
-```text
-Sarah: [img:https://example.com/photo.jpg|alt:A beach at sunset]
-```
-
-Replace the example URL with your image's address. Descriptions create placeholders; they do not generate photos. Uploaded images are preserved in JSON backups, while external image URLs still depend on their source.
-
-Quote names containing characters such as `/`, brackets, or colons:
+Quote names containing `/`, brackets, or colons:
 
 ```text
 [Chat: User / "Sarah / Work"]
@@ -113,52 +103,95 @@ Quote names containing characters such as `/`, brackets, or colons:
 "Sarah / Work": Hello!
 ```
 
-To write literal text that starts with image syntax, put a backslash before it: `Sarah: \[img:This is text]`.
+**Apply script replaces messages in the chats it lists.** Other chats remain. Without headers, it updates the selected chat. Syntax errors leave existing chats intact.
 
-**Applying a script replaces messages in the chats it lists.** Other chats remain in the story. A script without chat headers updates the currently selected chat. Syntax errors are shown beside the editor without applying the changes.
+## Preview and appearance
 
-## Preview chats in story order
+**Story order** is the default view. It stacks blocks in script order, including separate blocks for later visits to a chat. **Current chat** shows one conversation together. Preview and export preferences are saved with each story.
 
-Choose **Story order** in the Preview controls to stack chat blocks in the order they appear in the script. A later visit to the same chat appears as its own block. **Current chat** shows that conversation's messages together.
+**Earlier messages** fills spare room in short returning blocks with recent messages from that chat. A **New messages** line separates this read-only history from the new content. Long blocks show only new messages. Turn it off for compact blocks. New chats keep their top spacing; returning chats start below the header. PNG exports use the same layout.
 
-Open **Story blocks** in the Script tab to move or duplicate a whole block. In story view, each block has its own input, so preview edits go into that part of the story.
+Move near a phone's right edge to reveal its collapse button. Collapsed phones show only the top and bottom bars; exports still include all messages. The button above the first phone collapses or expands all blocks. Use **Script → Story blocks** to move or duplicate blocks.
 
-<img width="1100" height="1136" alt="story-order" src="https://github.com/user-attachments/assets/cecc2619-13cf-4335-a165-53986525a375" />
+<img width="1100" height="1136" alt="Chat blocks stacked in story order" src="https://github.com/user-attachments/assets/cecc2619-13cf-4335-a165-53986525a375" />
 
-## Customize the appearance
+**Settings** groups chat details, status, appearance, and screenshot overlap:
 
-In **Settings**, adjust the chat title, width, clock, battery, bubble color, avatars, phone frame, dark mode, and image cropping.
+- **Changes → All chats / This chat** sets the scope for future edits. Switching scope does not copy values. New stories use All chats.
+- **Apply to all** beside a setting copies that value everywhere and clears only its section overrides. **Apply all** copies the selected chat's phone settings. Globally applied values become defaults for new chats.
+- A **custom** count marks section overrides. Undo restores both values and overrides. Titles and group avatars belong to individual chats; character names and avatars are shared.
 
-**Apply to all chats** is enabled by default and shares the appearance across the current story, including new chats. Turn it off to style chats individually. Turning it back on copies the current chat's appearance to the others. Chat titles and group avatars stay separate; character names and avatars remain shared.
+In the preview, click the **clock** for its time picker, or **battery**, **signal**, and **Wi-Fi** for their controls. Drag those three icons to adjust their values; arrow keys also work. In Story order, these edits affect only that section. **Reset status** restores the chat's defaults; **Apply to all** copies a section value everywhere. In Current chat, edits follow Changes.
+
+Move near either phone edge to reveal a width handle. Drag to resize between 300–600 px, or use arrow keys (Shift for 10 px steps). Width follows Changes and supports Undo.
 
 <p align="center">
-  <img width="250" height=auto alt="group-chat" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
+  <img width="250" alt="Group conversation with sender names" src="https://github.com/user-attachments/assets/1cfc538a-4e44-49bf-9e44-f6a0747ab57e" />
 </p>
 
 ## Export images
 
-Open **Export** in the Preview controls; this section starts collapsed. Choose a resolution from **1×** to **3×**, then select an export:
+Open **Export** in Preview controls; it starts collapsed. Choose **1×–3×** resolution and an export:
 
-| Export | What you get |
+| Export | Current chat | Story order |
+| --- | --- | --- |
+| **Screenshots (ZIP)** | Pages covering the chat. | Pages of all blocks, in script order. |
+| **Full chat(s)** | One continuous PNG. | One continuous image per block, in an ordered ZIP. |
+| **Screenshot** | One image at the current scroll position. | One image of the selected chat at its scroll position. |
+
+Oversized continuous images split into numbered parts in one ZIP, preserving resolution. Each part includes the header and footer. Editing controls and unsent text are excluded. ZIP exports use a single download; progress and Cancel remain accessible during capture.
+
+Export options:
+
+- **Align top bubble** starts pages at message boundaries where possible. Bottom bubbles may be cropped; the final page aligns with the chat's bottom. Oversized messages continue across pages.
+- **Screenshot overlap (px)** in Settings controls repeated content between pages. Top alignment may adjust it; continuous images ignore it.
+- **Include full images** adds each image message's uncropped original after its first screenshot, once per message. Avatars, placeholders, and repeated history are excluded. Originals keep their dimensions and format. This option makes any image export a ZIP.
+- **Chat labels** inserts narrow PNGs such as **Sarah & Max** between conversation changes in Story order ZIPs, with the owner first. Labels match the next chat's width, resolution, and theme. The opening chat and consecutive blocks of the same chat have no label. **Skip owner** selects a character to omit labels for, such as User; a recipient with that name does not trigger the filter. Choose **Include everyone** to clear it.
+- **Progress status** advances time and drains battery across PNG exports. **Duration (min)** and **Battery drop (%)** set the totals; zero keeps either steady. Progress starts from preview values. A custom section clock or battery restarts that value's progress at the section's first message; other values use overall story progress.
+- **Vary signal & Wi-Fi** adds repeatable fluctuations around preview values. Choose each range independently, or Fixed; connections set to off stay off.
+
+Status progression follows the latest new message visible in each image. Repeated history, labels, and original image files do not advance it. Preview values stay unchanged.
+
+## Play a story
+
+1. Apply script edits, then choose **Preview → Export → Player (JSON)**.
+2. Open [player.html](player.html), click **Open story**, and select the `.chatstory.json` file. **Try example** loads a demo.
+3. Incoming messages arrive after a typing delay. Click **Send** or press **Enter** for the owner's scripted replies.
+
+The player opens with just the phone. **Controls** at the top-right contains pause, speed, restart, chats, timeline, and file options. Switching browser tabs pauses playback until you return.
+
+The phone's **back arrow** shows chats reached so far, recent messages, and unread counts. **As …** identifies the phone owner. A new chat starting with an incoming message shows a notification at the top of the phone; open it or its unread chat to continue. Chats starting with the owner's message open automatically. Returning chats retain their history and show a New messages divider.
+
+**Controls → Timeline** opens a story map beside the phone, or below it on small screens. Scroll to zoom at the cursor and drag to pan. Zooming out turns messages into dots, then compact chat lines. Click a message to jump; click a compact chat to zoom into it. **Now** follows playback; the percentage resets zoom. Arrow keys, Home/End, and Enter support navigation.
+
+Jumping rebuilds chat history and section status through that moment, clearing later notifications. A manual pause is preserved. Playback is linear; choices and branching remain future work. See the [player format](docs/player-format.md) for technical details.
+
+Player files contain applied story content, excluding drafts and undo history. They cannot be imported into the generator. Files stay in the browser session and are not uploaded; reopen them after reloading.
+
+## Save and manage stories
+
+Use the story selector to switch stories, or **New story**, **Rename**, and **Delete story** to manage them. The trash button beside the chat selector deletes only that chat.
+
+Changes autosave in this browser using IndexedDB; the status appears below the app title. Stories do not sync between browsers or devices. Back up before clearing browser data or changing the app's address.
+
+**Settings → Story backup (JSON) → Export** saves one editable story, including its name, chats, characters, images, settings, order, and drafts. **Import** replaces the current story; Undo restores it. Create a new story before importing to keep both. Duplicate names receive a number.
+
+## Project files and tests
+
+| File | Purpose |
 | --- | --- |
-| **Export chat (ZIP)** in Current chat view | Screenshots covering the selected conversation. |
-| **Export story (ZIP)** in Story order view | Screenshots of all story blocks, numbered in script order. |
-| **Save chat (PNG)** | One screenshot of the selected chat at its current scroll position, including when Story order is selected. |
+| [index.html](index.html) | Generator, preview, browser storage, and exports. |
+| [player.html](player.html) | Standalone player. |
+| [docs/player-format.md](docs/player-format.md) | Versioned playback format. |
+| [tests/test_generator_export.py](tests/test_generator_export.py) | Browser checks for preview settings, PNG layout, pagination, images, and ZIPs. |
+| [tests/test_player_timeline.py](tests/test_player_timeline.py) | Offline browser checks for playback, navigation, and seeking. |
 
-ZIP export uses one download for the full set of images. **Keep bubbles whole** avoids splitting messages across screenshots when they fit within one screen. Adjust **Screenshot overlap (px)** in Settings to control how much adjacent screenshots repeat.
+Both apps can run on a static host. Optional regression checks require Python, Playwright, and Chromium:
 
-Editing buttons, character controls, and unsent preview text are excluded from the images. Progress and **Cancel** remain visible if you collapse the Export section during a capture. Apply pending script edits before exporting a story.
+```sh
+python -m pip install playwright
+python -m playwright install chromium
+python -B -m unittest discover -s tests
+```
 
-## Save, import, and manage stories
-
-- Use the story selector to switch stories. **New story**, **Rename**, and **Delete story** manage the saved stories; the trash button beside the chat selector deletes only that chat.
-- Changes autosave in this browser using IndexedDB. Check the status below the app title.
-- Use **Settings → Story backup (JSON) → Export** to save an editable copy of the current story, including its name, chats, characters, images, settings, order, and drafts.
-- **Import** replaces the current story with the backup. Use **Undo** to restore the previous version, or create a new story before importing to keep both. Duplicate story names receive a number.
-- The **Undo** and **Redo** buttons reverse editing changes. **Ctrl/Cmd+Z** and **Ctrl/Cmd+Shift+Z** work outside text fields; inside a text field, normal text undo applies.
-
-Saved stories belong to this browser and page address. They do not automatically sync between browsers or devices. Export JSON backups before clearing browser data or moving the app to a different address. Each backup contains one story, not the entire story library.
-
-## Project files
-
-The app uses Tailwind CSS, Font Awesome, dom-to-image, and the Inter font through the external resources linked in `index.html`. No package installation or compilation is needed to run it. It can be served by a static web host.
+Generator tests need CDN access at startup; player tests work offline.
