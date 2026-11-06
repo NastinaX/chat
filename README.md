@@ -11,7 +11,7 @@ Both apps are standalone HTML files. No account or build step is required.
 ## Get started
 
 1. Download or clone this repository and open [index.html](index.html) in a modern browser.
-2. Click **Load example** to explore private chats, groups, timestamps, and images, or **Branching example** for an interactive story.
+2. Click **Load example** to explore one complete story with private chats, groups, images, timestamps, and branching replies.
 3. Edit through **Messages**, **Script**, or the preview.
 
 The generator loads Tailwind CSS, Font Awesome, Inter, and dom-to-image from CDNs, so it needs an internet connection. The [player](player.html) works offline with embedded images; external image URLs still need their host.
@@ -48,6 +48,8 @@ Preview edits update the script. Apply pending script edits before editing in th
 The sidebar button at the top-left collapses the editor. Click again, or press **Esc**, to reopen it.
 
 ## Script syntax
+
+The complete [Movie night script](examples/movie-night.txt) combines the syntax below: private chats, three- and four-person groups, different phone owners, returning chats, quoted names, multiline messages, timestamps, image placeholders, an embedded image with alt text, literal image syntax, three choices, shared scenes, and two endings. Copy it into **Script** and click **Apply script**, or open the matching [player file](examples/movie-night.chatstory.json) in the player. The ticket image is embedded so it works offline; its long data URL can also be replaced with an HTTP(S) image URL.
 
 Start a block with `[Chat: Name / Name]`. List three or more participants for a group, then prefix messages with their sender:
 
@@ -195,16 +197,22 @@ Status progression follows the latest new message visible in each image. Repeate
 ## Play a story
 
 1. Apply script edits, then choose **Preview → Export → Player (JSON)**.
-2. Open [player.html](player.html), click **Open story**, and select the `.chatstory.json` file. **Try example** loads a linear demo; **Try branching** demonstrates reply choices.
-3. Incoming messages arrive after a typing delay. Click **Send** or press **Enter** for the owner's scripted replies.
+2. Open [player.html](player.html), click **Open story**, and select the `.chatstory.json` file. **Try example** plays the same complete Movie night story as the generator.
+3. Click **Send** or press **Enter** or **Space** to send the owner's reply or reveal an incoming message without waiting for typing.
 
-The player opens with just the phone. **Controls** at the top-right contains pause, speed, restart, chats, timeline, and file options. Switching browser tabs pauses playback until you return.
+Hold **Space** to keep advancing after a short delay. Release to stop; choices and chat-switch prompts also stop it.
 
-The phone's **back arrow** shows chats reached so far, recent messages, and unread counts. **As …** identifies the phone owner. A new chat starting with an incoming message shows a notification at the top of the phone; open it or its unread chat to continue. Chats starting with the owner's message open automatically. Returning chats retain their history and show a New messages divider.
+The phone's top-right speed button cycles **Normal → Fast → Very fast**; one, two, or three arrows show the current mode. **Controls** contains pause, speed, restart, chats, timeline, and file options. Switching browser tabs pauses playback until you return.
+
+**Fast** shortens typing delays and pauses after sending. **Very fast** uses brief, visible pauses while automatically playing scripted messages and changing chats, stopping only at choices. Clicking a reply sends it and continues. Pause remains available; **Normal** and **Fast** use the Send button and chat notifications.
+
+The phone's **back arrow** shows chats reached so far, recent messages, and unread counts. **As …** identifies the phone owner. When the story moves to another chat, a notification appears at the top of the phone. Incoming messages show a preview; outgoing messages and choices show **Your turn**. Open the notification or select the chat from the list to continue. Unsent replies do not count as unread messages. Returning chats retain their history and show a New messages divider.
 
 **Controls → Timeline** opens a story map beside the phone, or below it on small screens. Scroll to zoom at the cursor and drag to pan. Zooming out turns messages into dots, then compact chat lines. Below 8%, only choices and small beginning/end markers remain, with the current position shown as a dot. Forks and joins stay connected. Click a message or a reached choice to jump; click a compact chat to zoom into it. **Now** follows playback; the percentage resets zoom. Arrow keys, Home/End, and Enter support navigation; in the choices overview, arrows skip between choices and endpoints.
 
 Jumping rebuilds chat history and section status through that moment, clearing later notifications. A manual pause is preserved. Branching stories show their forks and merges; only the chosen route contributes to chat history. See the [player format](docs/player-format.md) for technical details.
+
+Right-click a revealed message and choose **Jump back here** to return to that point, including when viewing an older chat. The menu pauses playback while open; clicking outside or pressing Esc closes it. Keyboard users can focus a message and press **Shift+F10** to open its menu. Later messages and decisions are cleared using the same rules as the timeline.
 
 Player files contain applied story content, excluding drafts and undo history. They cannot be imported into the generator. Files stay in the browser session and are not uploaded; reopen them after reloading.
 
@@ -223,6 +231,8 @@ Changes autosave in this browser using IndexedDB; the status appears below the a
 | [index.html](index.html) | Generator, preview, browser storage, and exports. |
 | [player.html](player.html) | Standalone player. |
 | [docs/player-format.md](docs/player-format.md) | Versioned playback format. |
+| [examples/movie-night.txt](examples/movie-night.txt) | The complete, copyable example script. |
+| [examples/movie-night.chatstory.json](examples/movie-night.chatstory.json) | The same story exported for the player. |
 | [tests/test_generator_export.py](tests/test_generator_export.py) | Browser checks for preview settings, PNG layout, pagination, images, and ZIPs. |
 | [tests/test_player_timeline.py](tests/test_player_timeline.py) | Offline browser checks for playback, navigation, and seeking. |
 | [tests/test_branching.py](tests/test_branching.py) | Scene syntax, branch preview/export, choices, and path history. |

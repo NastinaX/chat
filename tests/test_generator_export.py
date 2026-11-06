@@ -70,10 +70,10 @@ class GeneratorExportTests(unittest.TestCase):
         self.page.wait_for_function("projectReady")
         self.page.evaluate("""() => {
             applyProjectSnapshot(validateBackup(exampleProjectSnapshot('PNG checks')));
-            shareAppearance=false;characters.forEach(character=>character.avatar=null);
+            shareAppearance=false;sharedAppearance=sharedAppearanceFrom();storyFlow=null;previewChoices={};characters.forEach(character=>character.avatar=null);
             const chat=activeConversation();conversations=[chat];
             messages=[];chat.messages=messages;storyBlocks=defaultStoryBlocks(conversations);
-            settings.headerName='Lily';settings.scrollOverlap=50;previewMode='conversation';scriptDirty=false;
+            settings.headerName='Lily';settings.time=DEFAULT_SETTINGS.time;settings.scrollOverlap=50;previewMode='conversation';scriptDirty=false;
             exportOptions={scale:1,keepMessagesTogether:true};updateSettingsUI();
         }""")
 

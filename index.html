@@ -398,8 +398,7 @@
             <label for="project-select" class="sr-only">Story</label>
             <select id="project-select" onchange="switchProject(this.value)" class="w-full min-w-0 p-2 border rounded text-sm"></select>
             <button onclick="openProjectDialog('new')" class="px-3 py-1 border rounded text-sm">New story</button>
-            <button onclick="loadExampleProject()" class="px-3 py-1 border rounded text-sm">Load example</button>
-            <button id="load-branching-example" onclick="loadBranchingExampleProject()" class="px-3 py-1 border rounded text-sm">Branching example</button>
+            <button id="load-example" onclick="loadExampleProject()" class="px-3 py-1 border rounded text-sm">Load example</button>
             <button onclick="openProjectDialog('rename')" class="px-3 py-1 border rounded text-sm">Rename</button>
             <button id="delete-project" onclick="deleteProject()" class="px-3 py-1 border border-red-200 text-red-700 hover:bg-red-50 rounded text-sm">Delete story</button>
             <div class="flex gap-2">
@@ -546,7 +545,7 @@ Sarah: Hello!</pre>
                         <p>Repeat a header to revisit a chat. Only listed chats change; without headers, edits apply to the current chat.</p>
                         <p><code>Time: 9:41 AM</code> adds a timestamp. <code>[img:Beach photo]</code> adds an image description.</p>
                         <p>Indent newlines by two spaces. Quote names containing <code>/</code> or brackets.</p>
-                        <p>Branch with <code>[Scene: name]</code>, <code>[Choice]</code>, quoted replies such as <code>"Yes" -&gt; meet</code>, and <code>[End choice]</code>. Finish each scene with a choice, <code>[Go to: name]</code>, or <code>[End]</code>. Try <b>Branching example</b> above.</p>
+                        <p>Branch with <code>[Scene: name]</code>, <code>[Choice]</code>, quoted replies such as <code>"Yes" -&gt; meet</code>, and <code>[End choice]</code>. Finish each scene with a choice, <code>[Go to: name]</code>, or <code>[End]</code>. <b>Load example</b> shows all the syntax.</p>
                     </div>
                 </details>
                 
@@ -1456,7 +1455,7 @@ Sarah: Hello!</pre>
                 storyBlocks: [], previewMode: 'story', storyContext: true, scriptDraft: null, exportOptions: exportOptionsWithDefaults() };
         }
 
-        function exampleProjectSnapshot(name = 'Example story') {
+        function exampleOpeningSnapshot(name) {
             const snapshot = blankProjectSnapshot(name);
             snapshot.characters = ['User', 'Sarah', 'Max', 'Alex'].map(name => ({ id: `character_${name.toLowerCase()}`, name, avatar: null }));
             snapshot.conversations = [
@@ -1519,37 +1518,62 @@ Sarah: Hello!</pre>
             return snapshot;
         }
 
-        function branchingProjectSnapshot(name = 'Branching example') {
-            const snapshot = blankProjectSnapshot(name);
+        function exampleProjectSnapshot(name = 'Movie night') {
+            const snapshot = exampleOpeningSnapshot(name);
             snapshot.version = 3;
-            snapshot.characters = ['User', 'Sarah', 'Max'].map(name => ({ id: `character_${name.toLowerCase()}`, name, avatar: null }));
-            snapshot.conversations = ['sarah', 'max'].map(person => ({
-                id: `chat_user_${person}`, participantIds: ['character_user', `character_${person}`], ownerId: 'character_user',
-                settings: { ...DEFAULT_SETTINGS }, imageCache: {}, composer: {}, messages: []
-            }));
-            const sceneBlock = (scene, person, records, status = null) => {
-                const chat = snapshot.conversations.find(chat => chat.id === `chat_user_${person}`);
+            snapshot.characters.push({ id: 'character_cinema', name: 'Cinema / Tickets', avatar: null });
+            snapshot.conversations.push({ id: 'chat_tickets', participantIds: ['character_user', 'character_cinema'], ownerId: 'character_user',
+                settings: { ...DEFAULT_SETTINGS, headerName: 'Tickets', theme: 'green' }, imageCache: {}, composer: {}, messages: [] });
+            snapshot.conversations.forEach(chat => { chat.settings.time = '16:30'; });
+            snapshot.conversations.find(chat => chat.id === 'chat_movie_group').settings.darkMode = true;
+            snapshot.sharedAppearance.time = '16:30';
+            const sceneBlock = (scene, chatId, records, status = null) => {
+                const chat = snapshot.conversations.find(chat => chat.id === chatId);
                 const messages = records.map(([sender, content, type = 'text'], index) => ({
-                    id: `branch_${scene}_${index + 1}`, sender: sender === null ? null : `character_${sender}`,
-                    type, content, timestamp: 'Now', altText: ''
+                    id: `example_${scene}_${index + 1}`, sender: sender === null ? null : `character_${sender}`,
+                    type, content, timestamp: 'Now', altText: type === 'image' ? 'Movie ticket for Friday at 7 PM' : type === 'image-placeholder' ? content : ''
                 }));
                 chat.messages.push(...messages);
-                const block = { id: `branch_block_${scene}`, conversationId: chat.id, messageIds: messages.map(message => message.id), ...(status ? { status } : {}) };
+                const block = { id: `example_block_${scene}`, conversationId: chat.id, messageIds: messages.map(message => message.id), ...(status ? { status } : {}) };
                 snapshot.storyBlocks.push(block);
                 return block.id;
             };
-            const invitation = sceneBlock('invitation', 'sarah', [[null, 'Friday evening', 'timestamp'], ['sarah', 'Can you meet me tonight?']]);
-            const meet = sceneBlock('meet', 'sarah', [['sarah', "At the station. Eight o'clock."], ['sarah', "I'll bring the tickets."]], { time: '20:00', battery: 80 });
-            const stay = sceneBlock('stay_home', 'sarah', [['sarah', 'Okay. Keep your phone nearby.'], ['sarah', "I'll text you later."]], { time: '20:00', battery: 90 });
-            const later = sceneBlock('later', 'max', [['max', 'Did you hear from Sarah?'], ['user', "Yes. I'll keep you posted."]]);
+            const ticket = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150"><rect width="300" height="150" rx="16" fill="#172554"/><text x="24" y="55" fill="white" font-family="sans-serif" font-size="24">MOVIE NIGHT</text><text x="24" y="100" fill="#93c5fd" font-family="sans-serif" font-size="18">FRIDAY / 7 PM / SEAT A4</text></svg>');
+            sceneBlock('tickets', 'chat_tickets', [['user', 'Could you send my ticket?'], ['cinema', ticket, 'image']]);
+            sceneBlock('invitation', 'chat_movie_group_alex', [['max', '[img:This one is a text message]'],
+                ['alex', 'The tickets are ready. Meeting in person or joining us from home?']]);
+            const invitation = snapshot.storyBlocks.map(block => block.id);
+            const station = sceneBlock('at_station', 'chat_user_sarah', [[null, 'Friday, 6:30 PM', 'timestamp'],
+                ['sarah', "I'm outside the station.\nLook for the blue umbrella."], ['sarah', 'Popcorn or nachos?']], { time: '18:30', battery: 80, signalStrength: 3, wifiStrength: 0 });
+            const remote = sceneBlock('stay_home', 'chat_user_max', [['max', "No worries. We'll send you updates."],
+                ['user', 'My sofa, a blanket, and a bowl of snacks', 'image-placeholder'], ['max', "Let's start at the same time."]], { time: '18:35', battery: 90, wifiStrength: 3 });
+            const popcorn = sceneBlock('popcorn', 'chat_movie_group', [['max', 'Popcorn secured!'], ['sarah', 'Sweet and salty. Good choice.']]);
+            const nachos = sceneBlock('nachos', 'chat_movie_group', [['max', 'Nachos secured!'], ['sarah', 'Extra cheese, of course.']]);
+            const catchup = sceneBlock('catchup', 'chat_sarah_max', [['max', 'Did User pick a plan?'], ['sarah', "Yes. Everyone's ready."]]);
+            const movie = sceneBlock('movie', 'chat_movie_group_alex', [[null, 'Friday, 7:00 PM', 'timestamp'],
+                ['alex', 'Starting now!'], ['max', 'Anyone staying for a chat afterward?']], { time: '19:00', battery: 65, signalStrength: 4, wifiStrength: 2 });
+            const cafe = sceneBlock('cafe', 'chat_movie_group_alex', [[null, 'Friday, 9:15 PM', 'timestamp'],
+                ['sarah', 'The café is open. We can call anyone who is at home.'], ['alex', 'Best movie night in ages!']], { time: '21:15', battery: 35 });
+            const goodnight = sceneBlock('goodnight', 'chat_user_sarah', [[null, 'Later that night', 'timestamp'],
+                ['sarah', 'Thanks for joining us, wherever you watched from.'], ['user', 'Same time next week?'], ['sarah', 'Absolutely. Goodnight!']], { time: '21:30', battery: 30 });
             snapshot.flow = { start: 'invitation', scenes: [
-                { id: 'invitation', blockIds: [invitation], exit: { type: 'choice', id: 'choice:invitation', chatId: 'chat_user_sarah', options: [
-                    { id: 'meet_reply', text: 'Yes. Where?', target: 'meet' },
-                    { id: 'stay_reply', text: "Sorry, I can't.", target: 'stay_home' }
+                { id: 'invitation', blockIds: invitation, exit: { type: 'choice', id: 'choice:invitation', chatId: 'chat_movie_group_alex', options: [
+                    { id: 'meet', text: "I'll meet you at the station.", target: 'at_station' },
+                    { id: 'stay-home', text: "I'll join from home tonight.", target: 'stay_home' }
                 ] } },
-                { id: 'meet', blockIds: [meet], exit: { type: 'goto', target: 'later' } },
-                { id: 'stay_home', blockIds: [stay], exit: { type: 'goto', target: 'later' } },
-                { id: 'later', blockIds: [later], exit: { type: 'end' } }
+                { id: 'at_station', blockIds: [station], exit: { type: 'choice', id: 'choice:at_station', chatId: 'chat_user_sarah', options: [
+                    { id: 'popcorn', text: 'Popcorn, please!', target: 'popcorn' },
+                    { id: 'nachos', text: 'Nachos for me.', target: 'nachos' }
+                ] } },
+                { id: 'stay_home', blockIds: [remote], exit: { type: 'goto', target: 'movie' } },
+                { id: 'popcorn', blockIds: [popcorn], exit: { type: 'goto', target: 'movie' } },
+                { id: 'nachos', blockIds: [nachos], exit: { type: 'goto', target: 'movie' } },
+                { id: 'movie', blockIds: [catchup, movie], exit: { type: 'choice', id: 'choice:movie', chatId: 'chat_movie_group_alex', options: [
+                    { id: 'cafe', text: "Let's keep chatting at the café.", target: 'cafe' },
+                    { id: 'goodnight', text: "I'll call it a night. Have fun!", target: 'goodnight' }
+                ] } },
+                { id: 'cafe', blockIds: [cafe], exit: { type: 'end' } },
+                { id: 'goodnight', blockIds: [goodnight], exit: { type: 'end' } }
             ] };
             snapshot.activeConversationId = snapshot.conversations[0].id;
             return snapshot;
@@ -1659,7 +1683,7 @@ Sarah: Hello!</pre>
         async function createNamedProject(name, example = false) {
             return runProjectOperation(async () => {
                 name = validateProjectName(name);
-                const snapshot = example === 'branching' ? branchingProjectSnapshot(name) : example ? exampleProjectSnapshot(name) : blankProjectSnapshot(name);
+                const snapshot = example ? exampleProjectSnapshot(name) : blankProjectSnapshot(name);
                 const next = validateBackup(snapshot), id = 'project_' + generateUniqueId();
                 const entries = [...projectLibrary, { id, name }];
                 await autosaveRequest('readwrite', store => {
@@ -1671,9 +1695,7 @@ Sarah: Hello!</pre>
             });
         }
 
-        async function loadExampleProject() { return createNamedProject(uniqueProjectName('Example story'), true); }
-
-        async function loadBranchingExampleProject() { return createNamedProject(uniqueProjectName('Branching example'), 'branching'); }
+        async function loadExampleProject() { return createNamedProject(uniqueProjectName('Movie night'), true); }
 
         async function switchProject(id) {
             if (id === currentProjectId) return true;

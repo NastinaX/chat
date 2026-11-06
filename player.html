@@ -17,6 +17,10 @@
     button { border: 0; }
     svg { display: block; flex-shrink: 0; }
     [hidden] { display: none !important; }
+    #message-menu { position: fixed; z-index: 10; min-width: 170px; max-width: calc(100vw - 16px); padding: 4px; border: 1px solid #dce2ec; border-radius: 9px; background: #fff; color: #34445e; box-shadow: 0 6px 24px #17223824; }
+    #message-menu.dark { background: #242a35; color: #f3f4f6; border-color: #3b4555; }
+    #message-menu button { display: block; width: 100%; padding: 9px 12px; border-radius: 6px; background: transparent; color: inherit; text-align: left; font-size: 13px; }
+    #message-menu button:is(:hover,:focus-visible) { background: #2563eb15; }
     #controls-toggle { position: fixed; top: 16px; right: 16px; z-index: 5; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid #dfe4ec; border-radius: 10px; background: #fff; color: #718097; }
     #controls-toggle:hover { color: #2563eb; border-color: #b8c9e9; }
     a { color: #536077; text-decoration: none; font-size: 13px; }
@@ -37,8 +41,10 @@
     .status-icons { display: flex; align-items: center; gap: 7px; }
     .battery { display: flex; align-items: center; gap: 4px; font-size: 12px; }
     .phone-header { height: 64px; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid #e8ebf0; background: #f9fafb; }
-    .phone-header > svg, #chat-back svg { width: 28px; height: 28px; color: #267bfa; }
+    #chat-back svg { width: 28px; height: 28px; color: #267bfa; }
     #chat-back { position: relative; z-index: 1; display: grid; place-items: center; width: 36px; height: 40px; margin-left: -4px; padding: 0; background: transparent; }
+    #phone-speed { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 9px; background: transparent; color: #267bfa; }
+    #phone-speed:hover { background: #267bfa14; }
     #back-unread { position: absolute; top: -1px; left: 21px; min-width: 16px; padding: 2px 4px; border-radius: 10px; color: white; background: #2563eb; font-size: 9px; line-height: 1.2; }
     .contact { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 2px; text-align: center; pointer-events: none; }
     .avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #e1e6ed; color: #69768a; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 650; }
@@ -210,8 +216,8 @@
       <div id="phone">
         <div class="phone-status"><span id="clock">9:41</span><div class="status-icons"><svg id="signal" width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect data-bar="1" x="1" y="14" width="3" height="5" rx=".7"/><rect data-bar="2" x="6" y="10" width="3" height="9" rx=".7"/><rect data-bar="3" x="11" y="6" width="3" height="13" rx=".7"/><rect data-bar="4" x="16" y="2" width="3" height="17" rx=".7"/></svg><svg id="wifi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path data-level="3" d="M2 8a16 16 0 0 1 20 0"/><path data-level="2" d="M5 12a11 11 0 0 1 14 0"/><path data-level="1" d="M8.5 15.5a5.5 5.5 0 0 1 7 0"/><circle cx="12" cy="19" r=".8" fill="currentColor" stroke="none"/><path id="wifi-off" d="m3 3 18 18" hidden/></svg><div class="battery"><span id="battery-text">100%</span><svg width="26" height="16" viewBox="0 0 25 14" fill="none" aria-hidden="true"><rect x="1" y="1" width="20" height="12" rx="3" stroke="currentColor"/><path d="M23 5v4" stroke="currentColor" stroke-width="2"/><rect id="battery-fill" x="3" y="3" width="16" height="8" rx="1.5" fill="currentColor"/></svg></div></div></div>
         <section id="conversation-view" class="phone-view" aria-label="Conversation">
-        <div class="phone-header"><button id="chat-back" aria-label="Chats" title="Chats" aria-controls="chat-overview" disabled><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span id="back-unread" hidden></span></button><div class="contact"><span id="contact-avatar" class="avatar">S</span><span id="chat-name">Story Player</span></div><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="m15 10 6-3v10l-6-3"/></svg></div>
-        <div id="chat-scroll" class="drag-scroll" tabindex="0" aria-label="Revealed messages"><div id="chat-messages"></div><div id="typing" class="typing" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="typing-label"></span></div><div id="phone-empty" class="phone-empty"><span id="phone-empty-text" hidden></span><div id="phone-open-actions" class="phone-open-actions"><button id="phone-open-button" class="button primary">Open story</button><button id="phone-example-button" class="text-button">Try example</button><button id="phone-branching-example-button" class="text-button">Try branching</button></div></div></div>
+        <div class="phone-header"><button id="chat-back" aria-label="Chats" title="Chats" aria-controls="chat-overview" disabled><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg><span id="back-unread" hidden></span></button><div class="contact"><span id="contact-avatar" class="avatar">S</span><span id="chat-name">Story Player</span></div><button id="phone-speed" type="button" aria-label="Playback speed: Normal. Switch to Fast" title="Speed: Normal → Fast"><svg width="26" height="24" viewBox="0 0 26 24" fill="currentColor" aria-hidden="true"><g id="phone-speed-icon" transform="translate(8 0)"><path data-speed-level="1" d="m2 6 6 6-6 6Z"/><path data-speed-level="2" d="m10 6 6 6-6 6Z" hidden/><path data-speed-level="3" d="m18 6 6 6-6 6Z" hidden/></g></svg></button></div>
+        <div id="chat-scroll" class="drag-scroll" tabindex="0" aria-label="Revealed messages"><div id="chat-messages"></div><div id="typing" class="typing" hidden><span class="typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span id="typing-label"></span></div><div id="phone-empty" class="phone-empty"><span id="phone-empty-text" hidden></span><div id="phone-open-actions" class="phone-open-actions"><button id="phone-open-button" class="button primary">Open story</button><button id="phone-example-button" class="text-button">Try example</button></div></div></div>
         </section>
         <section id="chat-overview" class="phone-view" aria-label="Chats" hidden>
           <div class="overview-header"><h2>Messages</h2><button id="overview-current" aria-label="Current chat" title="Current chat"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div>
@@ -236,17 +242,1086 @@
       <p class="description" id="story-description">Open a story or try the example.</p>
       <button class="button" id="open-button">Open story</button>
       <section class="card" aria-label="Playback controls">
-        <div class="playback-top"><span class="role" id="playing-as">No story</span><label class="sr-only" for="speed">Playback speed</label><select id="speed" class="speed"><option value="1">Normal</option><option value="2">Fast</option></select></div>
+        <div class="playback-top"><span class="role" id="playing-as">No story</span><label class="sr-only" for="speed">Playback speed</label><select id="speed" class="speed"><option value="1">Normal</option><option value="2">Fast</option><option value="very-fast">Very fast</option></select></div>
         <label class="pause-control"><input id="playback-paused" type="checkbox" disabled>Pause</label>
         <div class="secondary-controls"><button id="restart-button" disabled>↻ Restart</button><span id="progress-label" class="progress-label">0 messages</span></div>
         <div class="progress-track" role="progressbar" id="progress" aria-label="Story progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
         <p id="playback-status" role="status" aria-live="polite">Open a story to start.</p>
       </section>
       <div class="navigation-controls"><button id="show-chats-button" class="button" disabled>Chats</button><button id="timeline-button" class="button" aria-controls="timeline-panel" aria-expanded="false" disabled>Timeline</button></div>
-      <div class="controls-footer"><button id="example-button" class="text-button">Try example</button><button id="branching-example-button" class="text-button">Try branching</button><a href="index.html">Generator</a></div>
+      <div class="controls-footer"><button id="example-button" class="text-button">Try example</button><a href="index.html">Generator</a></div>
       <p id="error" role="alert" hidden></p>
     </dialog>
   <div id="drop-overlay" hidden>Open story</div>
+  <div id="message-menu" role="menu" aria-label="Message options" hidden><button id="message-jump" type="button" role="menuitem">Jump back here</button></div>
+  <script id="example-story" type="application/json">
+{
+  "format": "chat-story-player",
+  "version": 2,
+  "story": {
+    "id": "movie-night",
+    "title": "Movie night"
+  },
+  "characters": [
+    {
+      "id": "character_user",
+      "name": "User",
+      "avatar": null
+    },
+    {
+      "id": "character_sarah",
+      "name": "Sarah",
+      "avatar": null
+    },
+    {
+      "id": "character_max",
+      "name": "Max",
+      "avatar": null
+    },
+    {
+      "id": "character_alex",
+      "name": "Alex",
+      "avatar": null
+    },
+    {
+      "id": "character_cinema",
+      "name": "Cinema / Tickets",
+      "avatar": null
+    }
+  ],
+  "chats": [
+    {
+      "id": "chat_user_sarah",
+      "title": "Sarah",
+      "participantIds": [
+        "character_user",
+        "character_sarah"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_user_max",
+      "title": "Max",
+      "participantIds": [
+        "character_user",
+        "character_max"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_sarah_max",
+      "title": "Max",
+      "participantIds": [
+        "character_sarah",
+        "character_max"
+      ],
+      "ownerId": "character_sarah",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_movie_group",
+      "title": "Movie night",
+      "participantIds": [
+        "character_user",
+        "character_sarah",
+        "character_max"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": true,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_movie_group_alex",
+      "title": "Movie night + Alex",
+      "participantIds": [
+        "character_user",
+        "character_sarah",
+        "character_max",
+        "character_alex"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_tickets",
+      "title": "Tickets",
+      "participantIds": [
+        "character_user",
+        "character_cinema"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "green",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    }
+  ],
+  "startNodeId": "chat:example_block_1",
+  "nodes": [
+    {
+      "id": "chat:example_block_1",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "next": "message:example_block_1:example_message_1"
+    },
+    {
+      "id": "message:example_block_1:example_message_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:30 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_2"
+    },
+    {
+      "id": "message:example_block_1:example_message_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Still up for a movie tonight?",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_3"
+    },
+    {
+      "id": "message:example_block_1:example_message_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_3",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Definitely! I'll check with Max.",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_4"
+    },
+    {
+      "id": "message:example_block_1:example_message_4",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_4",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Meet at the station.\nI'll bring the tickets.",
+        "altText": ""
+      },
+      "next": "chat:example_block_2"
+    },
+    {
+      "id": "chat:example_block_2",
+      "type": "chat",
+      "chatId": "chat_user_max",
+      "next": "message:example_block_2:example_message_5"
+    },
+    {
+      "id": "message:example_block_2:example_message_5",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_5",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Movie night with Sarah?",
+        "altText": ""
+      },
+      "next": "message:example_block_2:example_message_6"
+    },
+    {
+      "id": "message:example_block_2:example_message_6",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_6",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Yes! I'll ask Alex too.",
+        "altText": ""
+      },
+      "next": "message:example_block_2:example_message_7"
+    },
+    {
+      "id": "message:example_block_2:example_message_7",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_7",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Let's book four seats, then.",
+        "altText": ""
+      },
+      "next": "chat:example_block_3"
+    },
+    {
+      "id": "chat:example_block_3",
+      "type": "chat",
+      "chatId": "chat_sarah_max",
+      "next": "message:example_block_3:example_message_8"
+    },
+    {
+      "id": "message:example_block_3:example_message_8",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_8",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Does User know we're getting snacks first?",
+        "altText": ""
+      },
+      "next": "message:example_block_3:example_message_9"
+    },
+    {
+      "id": "message:example_block_3:example_message_9",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_9",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Not yet. I'll suggest it in the group.",
+        "altText": ""
+      },
+      "next": "message:example_block_3:example_message_10"
+    },
+    {
+      "id": "message:example_block_3:example_message_10",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_10",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Good plan!",
+        "altText": ""
+      },
+      "next": "chat:example_block_4"
+    },
+    {
+      "id": "chat:example_block_4",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_4:example_message_11"
+    },
+    {
+      "id": "message:example_block_4:example_message_11",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_11",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:40 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_12"
+    },
+    {
+      "id": "message:example_block_4:example_message_12",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_12",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Snacks before the movie?",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_13"
+    },
+    {
+      "id": "message:example_block_4:example_message_13",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_13",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Only if there's popcorn!",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_14"
+    },
+    {
+      "id": "message:example_block_4:example_message_14",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_14",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I found a cinema with a café next door.",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_15"
+    },
+    {
+      "id": "message:example_block_4:example_message_15",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_15",
+        "type": "image-placeholder",
+        "sender": "character_user",
+        "content": "A cinema entrance with a café next door",
+        "altText": "A cinema entrance with a café next door"
+      },
+      "next": "chat:example_block_5"
+    },
+    {
+      "id": "chat:example_block_5",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "next": "message:example_block_5:example_message_16"
+    },
+    {
+      "id": "message:example_block_5:example_message_16",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_16",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Alex is joining too.",
+        "altText": ""
+      },
+      "next": "message:example_block_5:example_message_17"
+    },
+    {
+      "id": "message:example_block_5:example_message_17",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_17",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Great! Put the meeting details in the new group.",
+        "altText": ""
+      },
+      "next": "chat:example_block_6"
+    },
+    {
+      "id": "chat:example_block_6",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "next": "message:example_block_6:example_message_18"
+    },
+    {
+      "id": "message:example_block_6:example_message_18",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_18",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:45 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_19"
+    },
+    {
+      "id": "message:example_block_6:example_message_19",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_19",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Thanks for the invite! Where are we meeting?",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_20"
+    },
+    {
+      "id": "message:example_block_6:example_message_20",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_20",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Tonight's plan:\n6:30 PM - meet at the station\n7:00 PM - movie starts",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_21"
+    },
+    {
+      "id": "message:example_block_6:example_message_21",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_21",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "I'll bring the tickets.",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_22"
+    },
+    {
+      "id": "message:example_block_6:example_message_22",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_22",
+        "type": "text",
+        "sender": "character_max",
+        "content": "And I'll handle the snacks.",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_23"
+    },
+    {
+      "id": "message:example_block_6:example_message_23",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_23",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "See you there!",
+        "altText": ""
+      },
+      "next": "chat:example_block_tickets"
+    },
+    {
+      "id": "chat:example_block_tickets",
+      "type": "chat",
+      "chatId": "chat_tickets",
+      "next": "message:example_block_tickets:example_tickets_1"
+    },
+    {
+      "id": "message:example_block_tickets:example_tickets_1",
+      "type": "message",
+      "chatId": "chat_tickets",
+      "message": {
+        "id": "example_tickets_1",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Could you send my ticket?",
+        "altText": ""
+      },
+      "next": "message:example_block_tickets:example_tickets_2"
+    },
+    {
+      "id": "message:example_block_tickets:example_tickets_2",
+      "type": "message",
+      "chatId": "chat_tickets",
+      "message": {
+        "id": "example_tickets_2",
+        "type": "image",
+        "sender": "character_cinema",
+        "content": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTUwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE2IiBmaWxsPSIjMTcyNTU0Ii8+PHRleHQgeD0iMjQiIHk9IjU1IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiPk1PVklFIE5JR0hUPC90ZXh0Pjx0ZXh0IHg9IjI0IiB5PSIxMDAiIGZpbGw9IiM5M2M1ZmQiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4Ij5GUklEQVkgLyA3IFBNIC8gU0VBVCBBNDwvdGV4dD48L3N2Zz4=",
+        "altText": "Movie ticket for Friday at 7 PM"
+      },
+      "next": "chat:example_block_invitation"
+    },
+    {
+      "id": "chat:example_block_invitation",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "next": "message:example_block_invitation:example_invitation_1"
+    },
+    {
+      "id": "message:example_block_invitation:example_invitation_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_invitation_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "[img:This one is a text message]",
+        "altText": ""
+      },
+      "next": "message:example_block_invitation:example_invitation_2"
+    },
+    {
+      "id": "message:example_block_invitation:example_invitation_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_invitation_2",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "The tickets are ready. Meeting in person or joining us from home?",
+        "altText": ""
+      },
+      "next": "choice:invitation"
+    },
+    {
+      "id": "chat:example_block_at_station",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "status": {
+        "time": "18:30",
+        "battery": 80,
+        "signalStrength": 3,
+        "wifiStrength": 0
+      },
+      "next": "message:example_block_at_station:example_at_station_1"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 6:30 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_at_station:example_at_station_2"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "I'm outside the station.\nLook for the blue umbrella.",
+        "altText": ""
+      },
+      "next": "message:example_block_at_station:example_at_station_3"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_3",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Popcorn or nachos?",
+        "altText": ""
+      },
+      "next": "choice:at_station"
+    },
+    {
+      "id": "chat:example_block_stay_home",
+      "type": "chat",
+      "chatId": "chat_user_max",
+      "status": {
+        "time": "18:35",
+        "battery": 90,
+        "wifiStrength": 3
+      },
+      "next": "message:example_block_stay_home:example_stay_home_1"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_1",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "No worries. We'll send you updates.",
+        "altText": ""
+      },
+      "next": "message:example_block_stay_home:example_stay_home_2"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_2",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_2",
+        "type": "image-placeholder",
+        "sender": "character_user",
+        "content": "My sofa, a blanket, and a bowl of snacks",
+        "altText": "My sofa, a blanket, and a bowl of snacks"
+      },
+      "next": "message:example_block_stay_home:example_stay_home_3"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_3",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_3",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Let's start at the same time.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_popcorn",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_popcorn:example_popcorn_1"
+    },
+    {
+      "id": "message:example_block_popcorn:example_popcorn_1",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_popcorn_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Popcorn secured!",
+        "altText": ""
+      },
+      "next": "message:example_block_popcorn:example_popcorn_2"
+    },
+    {
+      "id": "message:example_block_popcorn:example_popcorn_2",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_popcorn_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Sweet and salty. Good choice.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_nachos",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_nachos:example_nachos_1"
+    },
+    {
+      "id": "message:example_block_nachos:example_nachos_1",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_nachos_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Nachos secured!",
+        "altText": ""
+      },
+      "next": "message:example_block_nachos:example_nachos_2"
+    },
+    {
+      "id": "message:example_block_nachos:example_nachos_2",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_nachos_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Extra cheese, of course.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_catchup",
+      "type": "chat",
+      "chatId": "chat_sarah_max",
+      "next": "message:example_block_catchup:example_catchup_1"
+    },
+    {
+      "id": "message:example_block_catchup:example_catchup_1",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_catchup_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Did User pick a plan?",
+        "altText": ""
+      },
+      "next": "message:example_block_catchup:example_catchup_2"
+    },
+    {
+      "id": "message:example_block_catchup:example_catchup_2",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_catchup_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Yes. Everyone's ready.",
+        "altText": ""
+      },
+      "next": "chat:example_block_movie"
+    },
+    {
+      "id": "chat:example_block_movie",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "status": {
+        "time": "19:00",
+        "battery": 65,
+        "signalStrength": 4,
+        "wifiStrength": 2
+      },
+      "next": "message:example_block_movie:example_movie_1"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 7:00 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_movie:example_movie_2"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_2",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Starting now!",
+        "altText": ""
+      },
+      "next": "message:example_block_movie:example_movie_3"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_3",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_3",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Anyone staying for a chat afterward?",
+        "altText": ""
+      },
+      "next": "choice:movie"
+    },
+    {
+      "id": "chat:example_block_cafe",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "status": {
+        "time": "21:15",
+        "battery": 35
+      },
+      "next": "message:example_block_cafe:example_cafe_1"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 9:15 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_cafe:example_cafe_2"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "The café is open. We can call anyone who is at home.",
+        "altText": ""
+      },
+      "next": "message:example_block_cafe:example_cafe_3"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_3",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_3",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Best movie night in ages!",
+        "altText": ""
+      },
+      "next": "end"
+    },
+    {
+      "id": "chat:example_block_goodnight",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "status": {
+        "time": "21:30",
+        "battery": 30
+      },
+      "next": "message:example_block_goodnight:example_goodnight_1"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Later that night",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_2"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Thanks for joining us, wherever you watched from.",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_3"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_3",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Same time next week?",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_4"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_4",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_4",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Absolutely. Goodnight!",
+        "altText": ""
+      },
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "type": "end"
+    },
+    {
+      "id": "reply:invitation:meet",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:invitation:meet",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll meet you at the station.",
+        "altText": ""
+      },
+      "next": "chat:example_block_at_station"
+    },
+    {
+      "id": "reply:invitation:stay-home",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:invitation:stay-home",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll join from home tonight.",
+        "altText": ""
+      },
+      "next": "chat:example_block_stay_home"
+    },
+    {
+      "id": "choice:invitation",
+      "type": "choice",
+      "chatId": "chat_movie_group_alex",
+      "options": [
+        {
+          "id": "meet",
+          "text": "I'll meet you at the station.",
+          "next": "reply:invitation:meet"
+        },
+        {
+          "id": "stay-home",
+          "text": "I'll join from home tonight.",
+          "next": "reply:invitation:stay-home"
+        }
+      ]
+    },
+    {
+      "id": "reply:at_station:popcorn",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "reply:at_station:popcorn",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Popcorn, please!",
+        "altText": ""
+      },
+      "next": "chat:example_block_popcorn"
+    },
+    {
+      "id": "reply:at_station:nachos",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "reply:at_station:nachos",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Nachos for me.",
+        "altText": ""
+      },
+      "next": "chat:example_block_nachos"
+    },
+    {
+      "id": "choice:at_station",
+      "type": "choice",
+      "chatId": "chat_user_sarah",
+      "options": [
+        {
+          "id": "popcorn",
+          "text": "Popcorn, please!",
+          "next": "reply:at_station:popcorn"
+        },
+        {
+          "id": "nachos",
+          "text": "Nachos for me.",
+          "next": "reply:at_station:nachos"
+        }
+      ]
+    },
+    {
+      "id": "reply:movie:cafe",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:movie:cafe",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Let's keep chatting at the café.",
+        "altText": ""
+      },
+      "next": "chat:example_block_cafe"
+    },
+    {
+      "id": "reply:movie:goodnight",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:movie:goodnight",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll call it a night. Have fun!",
+        "altText": ""
+      },
+      "next": "chat:example_block_goodnight"
+    },
+    {
+      "id": "choice:movie",
+      "type": "choice",
+      "chatId": "chat_movie_group_alex",
+      "options": [
+        {
+          "id": "cafe",
+          "text": "Let's keep chatting at the café.",
+          "next": "reply:movie:cafe"
+        },
+        {
+          "id": "goodnight",
+          "text": "I'll call it a night. Have fun!",
+          "next": "reply:movie:goodnight"
+        }
+      ]
+    }
+  ]
+}
+  </script>
   <script>
     'use strict';
     const $ = id => document.getElementById(id);
@@ -381,7 +1456,7 @@
     }
 
     class PlaybackEngine {
-      constructor(story) { this.story=story;this.reset(); }
+      constructor(story) { this.story=story;this.messageNodeIds=new Map([...story.nodes.values()].filter(node=>node.type==='message').map(node=>[node.message,node.id]));this.reset(); }
       refreshRoute() { this.route=traceStoryRoute(this.story,this.decisions);this.routeIndex=new Map(this.route.map((node,index)=>[node.id,index])); }
       reset(decisions=new Map()) { this.decisions=new Map(decisions);this.nodeId=this.story.startNodeId; this.visitedNodeIds=[]; this.histories=new Map(); this.returnMarkers=new Map(); this.chatStatuses=new Map(); this.lastMessageChatId=null; this.visitedChatIds=[]; this.activeChatId=null; this.started=false; this.finished=false; this.messageCount=0; this.part=0;this.refreshRoute(); }
       current() { return this.nodeId===null?null:this.story.nodes.get(this.nodeId); }
@@ -427,9 +1502,10 @@
     }
 
     let story=null, engine=null, playing=false, timer=null, timerGeneration=0, readGeneration=0, resumeOnVisible=false;
-    let viewedChatId=null, followActive=true, typingSender=null, ownerWaiting=false, sendLocked=false, newestMessageId=null;
+    let viewedChatId=null, typingSender=null, ownerWaiting=false, sendLocked=false, newestMessageId=null;
     let renderedChatId=null, renderedMessageCount=0, headerAvatarKey='';
-    let overviewOpen=false, pendingChatId=null, chatListKey='', replyOptionsKey='';
+    let overviewOpen=false, pendingChatId=null, pendingChatKind=null, chatListKey='', replyOptionsKey='';
+    let messageMenuContext=null, spaceSendHeld=false, spaceRepeatTimer=null;
     const unreadCounts=new Map(), chatActivity=new Map();
     const historyScrolls=new Map();
     const TIMELINE_STEP=84, TIMELINE_MARGIN=24, TIMELINE_LANE=220, TIMELINE_MIN_ZOOM=.02, TIMELINE_MAX_ZOOM=2;
@@ -494,6 +1570,7 @@
       document.addEventListener('keydown',event=>{if(event.key==='Escape'&&scrollPan){event.preventDefault();stopScrollPan();}});
     }
     function openControls() {
+      closeMessageMenu();
       stopScrollPan();
       if(!$('player-controls').open)$('player-controls').showModal();
       $('controls-toggle').setAttribute('aria-expanded','true');
@@ -654,6 +1731,7 @@
     }
     function currentTimelineId() { return engine.current()?.type==='choice'?engine.current().id:engine.visitedNodeIds.at(-1)??null; }
     function openTimeline() {
+      closeMessageMenu();
       if(!engine)return;
       closeControls();$('timeline-panel').hidden=false;document.body.classList.add('timeline-open');$('timeline-button').setAttribute('aria-expanded','true');
       timelineFollow=true;timelineSelection=currentTimelineId();timelineViewportKey='';
@@ -792,11 +1870,12 @@
         if(isCurrent)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');
       });
     }
-    function seekStory(nodeId) {
+    function seekStory(nodeId,{resume=null}={}) {
       if(!engine||(nodeId!==null&&!engine.routeIndex.has(nodeId)))return false;
-      const continuePlaying=playing||resumeOnVisible||(engine.finished&&!pendingChatId);
+      const continuePlaying=resume??(playing||resumeOnVisible||(engine.finished&&!pendingChatId));
+      closeMessageMenu({restoreFocus:false,resume:false});
       clearTimer();playing=false;resumeOnVisible=false;engine.seekTo(nodeId);
-      viewedChatId=null;followActive=true;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;headerAvatarKey='';historyScrolls.clear();resetNavigation();
+      viewedChatId=null;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;headerAvatarKey='';historyScrolls.clear();resetNavigation();
       for(let index=0;index<engine.visitedNodeIds.length;index++) {const node=story.nodes.get(engine.visitedNodeIds[index]);if(node.type==='message')chatActivity.set(node.chatId,index+1);}
       viewedChatId=engine.activeChatId||previewChat()?.id||null;
       const fromTimeline=$('timeline-panel').contains(document.activeElement);
@@ -813,7 +1892,12 @@
     }
     function placeholder(text) { const node=element('div','image-placeholder'); const icon=element('span','', '▧'); icon.style.fontSize='28px'; icon.setAttribute('aria-hidden','true'); node.append(icon,element('span','',text || 'Image unavailable')); return node; }
     function renderMessage(message,chat,previous) {
-      if (message.type==='timestamp') return element('div','timestamp',message.content);
+      const mark=row=>{
+        row.dataset.messageId=message.id;row.dataset.storyNode=engine.messageNodeIds.get(message);row.tabIndex=0;
+        row.setAttribute('aria-haspopup','menu');row.setAttribute('aria-controls','message-menu');row.setAttribute('aria-expanded','false');
+        return row;
+      };
+      if (message.type==='timestamp') return mark(element('div','timestamp',message.content));
       const own=message.sender===chat.ownerId, sequence=previous && previous.sender===message.sender && previous.type!=='timestamp';
       const row=element('div',`message${own?' sent':''}${sequence?' sequence':''}${message.id===newestMessageId?' new':''}`); row.dataset.messageId=message.id;
       if (!own && chat.settings.showAvatar) { const avatar=createAvatar(story.characters.get(message.sender)?.avatar,nameFor(message.sender)); if(sequence)avatar.classList.add('spacer'); row.appendChild(avatar); }
@@ -825,7 +1909,26 @@
         image.addEventListener('load',()=>{const scroll=$('chat-scroll');if(viewedChatId===chat.id&&scrollPan?.viewport!==scroll&&scroll.scrollHeight-scroll.clientHeight-scroll.scrollTop<50)scroll.scrollTop=scroll.scrollHeight;},{once:true}); content.appendChild(image);
       } else if(message.type==='image-placeholder') content.appendChild(placeholder(message.content));
       else content.appendChild(element('div','bubble',message.content));
-      row.appendChild(content); return row;
+      row.appendChild(content); return mark(row);
+    }
+    function closeMessageMenu({restoreFocus=true,resume=true}={}) {
+      const context=messageMenuContext;if(!context)return;
+      messageMenuContext=null;$('message-menu').hidden=true;context.anchor.setAttribute('aria-expanded','false');
+      if(restoreFocus&&context.anchor.isConnected)context.anchor.focus({preventScroll:true});
+      if(resume&&context.resumeOnClose&&context.story===story)play({closePanel:false});
+    }
+    function openMessageMenu(anchor,x,y) {
+      const nodeId=anchor.dataset.storyNode;
+      if(!engine?.visitedNodeIds.includes(nodeId))return;
+      const previous=messageMenuContext;
+      const resumeOnClose=previous?.resumeOnClose??(playing||resumeOnVisible);
+      const resumeOnJump=previous?.resumeOnJump??(resumeOnClose||(engine.finished&&!pendingChatId));
+      closeMessageMenu({restoreFocus:false,resume:false});stopScrollPan();pause();
+      messageMenuContext={anchor,nodeId,story,resumeOnClose,resumeOnJump};anchor.setAttribute('aria-expanded','true');
+      const menu=$('message-menu');menu.classList.toggle('dark',$('phone').classList.contains('dark'));menu.hidden=false;
+      menu.style.left=`${Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,x))}px`;
+      menu.style.top=`${Math.max(8,Math.min(innerHeight-menu.offsetHeight-8,y))}px`;
+      $('message-jump').focus({preventScroll:true});
     }
     function previewChat() {
       if (viewedChatId && story.chats.has(viewedChatId)) return story.chats.get(viewedChatId);
@@ -842,8 +1945,10 @@
       return `${prefix}${text}`.replace(/\s+/g,' ').slice(0,160);
     }
     function resetNavigation() {
+      stopSpaceRepeat();
+      closeMessageMenu({restoreFocus:false,resume:false});
       stopScrollPan();
-      overviewOpen=false;pendingChatId=null;chatListKey='';
+      overviewOpen=false;pendingChatId=null;pendingChatKind=null;chatListKey='';
       unreadCounts.clear();chatActivity.clear();$('chat-notification').hidden=true;$('notification-announcement').textContent='';
     }
     function showChatOverview() {
@@ -851,18 +1956,18 @@
       stopScrollPan();
       closeControls();
       if(!overviewOpen&&renderedChatId)historyScrolls.set(renderedChatId,$('chat-scroll').scrollTop);
-      overviewOpen=true;followActive=false;renderedChatId=null;renderedMessageCount=0;render();
+      overviewOpen=true;renderedChatId=null;renderedMessageCount=0;notifyWaitingReply();render();
       $('chat-list').querySelector('button')?.focus({preventScroll:true});
     }
     function openChat(id) {
       if(!engine || !story.chats.has(id) || (!engine.histories.has(id)&&id!==viewedChatId))return;
       stopScrollPan();
       closeControls();
-      viewedChatId=id;overviewOpen=false;followActive=id===engine.activeChatId;unreadCounts.delete(id);
+      viewedChatId=id;overviewOpen=false;unreadCounts.delete(id);
       const wasPending=pendingChatId===id;
-      if(wasPending){pendingChatId=null;$('notification-announcement').textContent='';}
+      if(wasPending){pendingChatId=null;pendingChatKind=null;$('notification-announcement').textContent='';}
       if(engine.finished&&!pendingChatId)playing=false;
-      render();
+      notifyWaitingReply();render();
       if(wasPending&&playing&&timer===null)pump();
       $('chat-scroll').focus({preventScroll:true});
     }
@@ -870,21 +1975,21 @@
       const ids=[...engine.visitedChatIds];
       if(!ids.length&&viewedChatId)ids.push(viewedChatId);
       ids.sort((a,b)=>(chatActivity.get(b)||0)-(chatActivity.get(a)||0));
-      const key=JSON.stringify(ids.map(id=>[id,engine.histories.get(id)?.length||0,unreadCounts.get(id)||0,id===engine.activeChatId&&ownerWaiting]));
+      const key=JSON.stringify(ids.map(id=>[id,engine.histories.get(id)?.length||0,unreadCounts.get(id)||0,id===engine.activeChatId&&ownerWaiting,id===pendingChatId?pendingChatKind:null]));
       if(key===chatListKey)return;
       chatListKey=key;
       const list=$('chat-list'), top=list.scrollTop, focusedId=document.activeElement?.closest('[data-open-chat]')?.dataset.openChat;
       list.replaceChildren(...ids.map(id=>{
-        const chat=story.chats.get(id), unread=unreadCounts.get(id)||0, history=engine.histories.get(id)||[];
+        const chat=story.chats.get(id), unread=unreadCounts.get(id)||0, history=engine.histories.get(id)||[],replyPending=id===pendingChatId&&pendingChatKind==='reply';
         const last=history.findLast(message=>message.type!=='timestamp');
         const item=element('li'), row=element('button',`chat-list-row${unread?' unread':''}`);
         row.dataset.openChat=id;
         const copy=element('span','chat-list-copy'), heading=element('span','chat-list-heading');
         heading.appendChild(element('span','chat-list-name',headerLabel(chat)));
         if(unread)heading.appendChild(element('span','unread-count',unread>99?'99+':String(unread)));
-        copy.append(heading,element('span','chat-list-preview',!last&&id===engine.activeChatId&&ownerWaiting?'Your turn':messagePreview(last,chat)),element('span','chat-list-owner',`As ${nameFor(chat.ownerId)}`));
+        copy.append(heading,element('span','chat-list-preview',replyPending||(!last&&id===engine.activeChatId&&ownerWaiting)?'Your turn':messagePreview(last,chat)),element('span','chat-list-owner',`As ${nameFor(chat.ownerId)}`));
         row.append(createAvatar(chatAvatar(chat),headerLabel(chat)),copy);
-        row.setAttribute('aria-label',`${headerLabel(chat)}, as ${nameFor(chat.ownerId)}${unread?`, ${unread} unread`:''}`);
+        row.setAttribute('aria-label',`${headerLabel(chat)}, as ${nameFor(chat.ownerId)}${replyPending?', your turn':''}${unread?`, ${unread} unread`:''}`);
         row.addEventListener('click',()=>openChat(id));item.appendChild(row);return item;
       }));
       list.scrollTop=top;
@@ -895,15 +2000,23 @@
       chatActivity.set(chat.id,engine.visitedNodeIds.length);
       if(!incoming||isChatVisible(chat.id))return;
       unreadCounts.set(chat.id,(unreadCounts.get(chat.id)||0)+1);
+      notifyChat(chat,node.message);
+    }
+    function notifyChat(chat,message=null) {
+      const reply=message===null;
       pendingChatId=chat.id;
+      pendingChatKind=reply?'reply':'incoming';
+      chatActivity.set(chat.id,engine.visitedNodeIds.length);
       const avatar=createAvatar(chatAvatar(chat),headerLabel(chat));avatar.id='notification-avatar';$('notification-avatar').replaceWith(avatar);
       $('notification-title').textContent=headerLabel(chat);
       $('notification-owner').textContent=`As ${nameFor(chat.ownerId)}`;
-      $('notification-preview').textContent=messagePreview(node.message,chat);
-      $('chat-notification').setAttribute('aria-label',`Open ${headerLabel(chat)}, as ${nameFor(chat.ownerId)}: ${messagePreview(node.message,chat)}`);
-      $('notification-announcement').textContent=`New message from ${nameFor(node.message.sender)} in ${headerLabel(chat)}. Open the chat to continue.`;
+      const preview=reply?'Your turn. Open chat to reply.':messagePreview(message,chat);
+      $('notification-preview').textContent=preview;
+      $('chat-notification').setAttribute('aria-label',`Open ${headerLabel(chat)}, as ${nameFor(chat.ownerId)}: ${preview}`);
+      $('notification-announcement').textContent=reply?`Your turn in ${headerLabel(chat)}, as ${nameFor(chat.ownerId)}. Open the chat to reply.`
+        :`New message from ${nameFor(message.sender)} in ${headerLabel(chat)}. Open the chat to continue.`;
     }
-    // Leading timestamps do not decide whether a new block should open automatically.
+    // Leading timestamps do not decide whether a chat needs a reply prompt.
     function firstChatMessage(node,chatId) {
       while(node&&node.type!=='end'&&node.chatId===chatId){
         if(node.type==='choice')return {sender:story.chats.get(chatId).ownerId};
@@ -916,13 +2029,26 @@
       engine.activeChatId=chatId;
       if(!engine.histories.has(chatId)){engine.histories.set(chatId,[]);engine.visitedChatIds.push(chatId);}
       const first=firstChatMessage(engine.current(),chatId), owner=story.chats.get(chatId).ownerId;
-      if(!viewedChatId || (followActive&&!overviewOpen&&first?.sender===owner))viewedChatId=chatId;
+      if(!viewedChatId)viewedChatId=chatId;
+      if(!pendingChatId&&!isChatVisible(chatId)&&first?.sender===owner)notifyChat(story.chats.get(chatId));
+    }
+    function notifyWaitingReply() {
+      const node=engine.current();
+      if(playing&&!pendingChatId&&(node?.type==='choice'||(node?.type==='message'&&node.message.type!=='timestamp'&&node.message.sender===story.chats.get(node.chatId).ownerId)))activatePlaybackChat(node.chatId);
+    }
+    function renderSpeedControl() {
+      const speed=$('speed'), index=speed.selectedIndex, next=speed.options[(index+1)%speed.options.length].text;
+      $('phone-speed').title=`Speed: ${speed.selectedOptions[0].text} → ${next}`;
+      $('phone-speed').setAttribute('aria-label',`Playback speed: ${speed.selectedOptions[0].text}. Switch to ${next}`);
+      $('phone-speed-icon').setAttribute('transform',`translate(${(2-index)*4} 0)`);
+      $('phone-speed-icon').querySelectorAll('[data-speed-level]').forEach(path=>path.toggleAttribute('hidden',Number(path.dataset.speedLevel)>index+1));
     }
     function render() {
+      renderSpeedControl();
       if (!engine) return;
       const chat=previewChat(), active=engine.chat(), ownerTurn=ownerWaiting && playing && !sendLocked && !pendingChatId;
       const choice=engine.current()?.type==='choice'?engine.current():null;
-      const complete=engine.finished&&!pendingChatId, needsOpen=playing&&(!!pendingChatId||((ownerTurn||choice)&&active&&!isChatVisible(active.id)));
+      const complete=engine.finished&&!pendingChatId;
       $('story-title').textContent=story.story.title;
       $('story-description').textContent=`${story.chats.size} ${story.chats.size===1?'chat':'chats'} · ${story.branching?'Interactive story':`${story.messageCount} messages`}`;
       $('playback-paused').disabled=complete;
@@ -934,11 +2060,10 @@
       $('progress-fill').style.width=`${progress??0}%`;
       if(progress===null)$('progress').removeAttribute('aria-valuenow');else $('progress').setAttribute('aria-valuenow',progress);
       $('progress').setAttribute('aria-valuetext',story.branching?`${engine.messageCount} messages played${complete?', complete':', length depends on choices'}`:`${progress}%`);
-      const status=!engine.started?'Ready.':complete?'Complete.':!playing?'Paused.':pendingChatId?'Open the new message.':choice?(engine.isOwnerTurn()?'Send your reply.':'Choose a reply.'):ownerTurn?'Your turn.':typingSender?`${typingSender} is typing…`:'Playing…';
+      const status=!engine.started?'Ready.':complete?'Complete.':!playing?'Paused.':pendingChatId?(pendingChatKind==='reply'?'Open the chat to reply.':'Open the new message.'):choice?(engine.isOwnerTurn()?'Send your reply.':'Choose a reply.'):ownerTurn?'Your turn.':typingSender?`${typingSender} is typing…`:'Playing…';
       $('playback-status').textContent=status;
       $('phone-session').hidden=false;
-      $('phone-play-button').hidden=!complete&&!needsOpen;
-      $('phone-play-button').textContent=needsOpen?'Open chat':'Replay';
+      $('phone-play-button').hidden=!complete;
       $('conversation-view').hidden=overviewOpen;$('chat-overview').hidden=!overviewOpen;$('chat-composer').hidden=overviewOpen;
       $('chat-back').disabled=false;$('show-chats-button').disabled=false;
       $('timeline-button').disabled=false;
@@ -950,12 +2075,13 @@
       renderTimeline();
       const browsing=overviewOpen || (!!active && chat?.id!==active.id);
       renderReplyOptions(choice,browsing);
-      $('send-button').disabled=!ownerTurn;
-      $('send-button').title=browsing?'Return to the current chat':'Send next message (Enter)';
-      $('send-button').setAttribute('aria-label',browsing?'Return to the current chat':'Send next message');
+      const sendLabel=isIncomingTyping()?'Show incoming message':'Send next message';
+      $('send-button').disabled=!canSendMessage()||browsing;
+      $('send-button').title=`${sendLabel} (Enter or Space)`;
+      $('send-button').setAttribute('aria-label',sendLabel);
       const draft=ownerTurn && !browsing?engine.preparedReply()?.message:null;
       $('scripted-message').value=draft?(draft.type==='text'?draft.content:draft.type==='image-placeholder'?`[Image: ${draft.content}]`:'[Image]'):'';
-      $('scripted-message').placeholder=browsing?'Viewing history':pendingChatId?'New message':complete?'Complete':!engine.started?'Message':!playing?'Paused':choice?'Choose a reply':typingSender?'Waiting…':'Message';
+      $('scripted-message').placeholder=pendingChatId?(pendingChatKind==='reply'?'Your turn in another chat':'New message'):browsing?'Viewing history':complete?'Complete':!engine.started?'Message':!playing?'Paused':choice?'Choose a reply':typingSender?'Waiting…':'Message';
       $('scripted-message').rows=draft?Math.min(4,Math.max(1,draft.content.split('\n').length,Math.ceil(draft.content.length/45))):1;
       if(!chat)return;
       document.documentElement.style.setProperty('--phone-width',`${chat.settings.screenWidth}px`);
@@ -1008,7 +2134,8 @@
         replyOptionsKey=key;
         holder.replaceChildren(...choice.options.map(option=>{
           const button=element('button','reply-option',option.text);button.type='button';button.dataset.choiceOption=option.id;
-          button.addEventListener('click',()=>chooseStoryOption(option.id));return button;
+          button.addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key))event.preventDefault();});
+          button.addEventListener('click',event=>{if(event.detail<=1)chooseStoryOption(option.id);});return button;
         }));
       }
       holder.querySelectorAll('button').forEach(button=>{
@@ -1021,31 +2148,53 @@
       if(!engine.current().options.some(option=>option.id===optionId))return false;
       clearTimer();
       if(!engine.choose(optionId))return false;
-      ownerWaiting=true;render();$('scripted-message').focus({preventScroll:true});return true;
+      ownerWaiting=true;
+      if(isAutomaticPlayback()){sendMessage();return true;}
+      render();$('scripted-message').focus({preventScroll:true});return true;
+    }
+    function isAutomaticPlayback() { return $('speed').value==='very-fast'; }
+    function playbackDelay(node) {
+      const speed=$('speed').value;
+      if(speed==='very-fast')return node.type==='chat'?90:node.type==='end'?100:node.message.type==='timestamp'?70:Math.min(220,80+node.message.content.length*1.1);
+      if(speed==='2')return node.type==='chat'?150:node.type==='end'?120:node.message.type==='timestamp'?100:Math.min(500,160+node.message.content.length*3);
+      return node.type==='chat'?(engine.visitedNodeIds.length?900:220):node.type==='end'?650:node.message.type==='timestamp'?550:Math.min(2300,850+node.message.content.length*16);
     }
     function schedule(delay,callback) { const generation=timerGeneration;timer=setTimeout(()=>{timer=null;if(generation!==timerGeneration || !playing)return;callback();},delay); }
-    function pause() { clearTimer();playing=false;render(); }
+    function pause() { stopSpaceRepeat();clearTimer();playing=false;render(); }
     function pump() {
-      if(!engine || !playing || engine.finished || pendingChatId){render();return;}
+      if(!engine||!playing){render();return;}
+      const automatic=isAutomaticPlayback();
+      if(automatic){pendingChatId=null;pendingChatKind=null;unreadCounts.clear();$('notification-announcement').textContent='';overviewOpen=false;viewedChatId=engine.activeChatId||viewedChatId;}
+      if(automatic&&engine.finished)playing=false;
+      if(engine.finished||pendingChatId){render();return;}
       const node=engine.current();
       if(!node){engine.finished=true;playing=false;render();return;}
-      const speed=Number($('speed').value);
+      if(automatic&&node.chatId)viewedChatId=node.chatId;
       if(node.type==='message'||node.type==='choice')activatePlaybackChat(node.chatId);
-      if(node.type==='choice') {ownerWaiting=engine.isOwnerTurn();typingSender=null;render();return;}
-      if(node.type==='message' && engine.isOwnerTurn()) {
+      if(pendingChatId){render();return;}
+      if(node.type==='choice') {
+        ownerWaiting=engine.isOwnerTurn();typingSender=null;render();
+        if(automatic&&!document.querySelector('dialog[open]'))$('reply-options').querySelector('button')?.focus({preventScroll:true});
+        return;
+      }
+      if(node.type==='message' && engine.isOwnerTurn()&&!automatic) {
         ownerWaiting=true;typingSender=null;render();return;
       }
       ownerWaiting=false;
-      if(node.type==='message' && node.message.type!=='timestamp')typingSender=nameFor(node.message.sender);
+      if(node.type==='message' && node.message.type!=='timestamp'&&!engine.isOwnerTurn())typingSender=nameFor(node.message.sender);
+      schedule(playbackDelay(node),()=>advancePlaybackNode(automatic));
       render();
-      const delay=node.type==='chat'?(engine.visitedNodeIds.length?900:220):node.type==='end'?650:node.message.type==='timestamp'?550:Math.min(2300,850+node.message.content.length*16);
-      schedule(delay/speed,()=>{
-        const visited=engine.advance();typingSender=null;
-        if(visited?.type==='chat')activatePlaybackChat(visited.chatId);
-        if(visited?.type==='message'){newestMessageId=visited.message.id;receiveMessage(visited);}
-        if(engine.finished&&!pendingChatId)playing=false;
-        render();pump();
-      });
+    }
+    function advancePlaybackNode(automatic) {
+      const visited=engine.advance();typingSender=null;
+      if(automatic&&visited?.chatId){viewedChatId=visited.chatId;overviewOpen=false;}
+      if(visited?.type==='chat')activatePlaybackChat(visited.chatId);
+      if(visited?.type==='message'){
+        newestMessageId=visited.message.id;
+        if(automatic)chatActivity.set(visited.chatId,engine.visitedNodeIds.length);else receiveMessage(visited);
+      }
+      if(engine.finished&&!pendingChatId)playing=false;
+      render();pump();
     }
     function play({closePanel=true}={}) {
       if(!engine)return;
@@ -1059,19 +2208,51 @@
       const wasPlaying=playing;pause();
       if(engine.started && !confirm('Restart this story from the beginning?')){if(wasPlaying)play({closePanel:false});return false;}
       timelineFollow=true;
-      engine.reset();viewedChatId=null;followActive=true;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;historyScrolls.clear();resetNavigation();viewedChatId=previewChat()?.id||null;play();return true;
+      engine.reset();viewedChatId=null;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;historyScrolls.clear();resetNavigation();viewedChatId=previewChat()?.id||null;play();return true;
+    }
+    function isIncomingTyping() {
+      const node=engine?.current();
+      return !!typingSender&&timer!==null&&node?.type==='message'&&node.message.type!=='timestamp'&&!engine.isOwnerTurn();
+    }
+    function canSendMessage() {
+      return !!engine&&playing&&!pendingChatId&&!sendLocked&&isChatVisible(engine.activeChatId)&&
+        ((ownerWaiting&&engine.isOwnerTurn())||isIncomingTyping());
     }
     function sendMessage() {
-      if(!engine || !playing || pendingChatId || !ownerWaiting || sendLocked || !engine.isOwnerTurn())return;
-      if(!isChatVisible(engine.activeChatId)){openChat(engine.activeChatId);return;}
-      followActive=true;viewedChatId=engine.current().chatId;ownerWaiting=false;sendLocked=true;
+      if(!canSendMessage())return;
+      if(isIncomingTyping()){clearTimer();advancePlaybackNode(isAutomaticPlayback());return;}
+      ownerWaiting=false;sendLocked=true;
       if(engine.current().type==='choice')engine.advance();
       const visited=engine.advance();newestMessageId=visited.message.id;chatActivity.set(visited.chatId,engine.visitedNodeIds.length);render();
       if(engine.finished){playing=false;sendLocked=false;render();return;}
-      schedule(Math.max(350,500/Number($('speed').value)),()=>{sendLocked=false;pump();});
+      schedule(isAutomaticPlayback()?80:$('speed').value==='2'?100:500,()=>{sendLocked=false;pump();});
+    }
+    function handleSendShortcut(event) {
+      if(!['Enter',' '].includes(event.key)||event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||event.isComposing)return;
+      if(document.querySelector('dialog[open]')||messageMenuContext)return;
+      const composer=event.target.id==='scripted-message'&&event.target.readOnly;
+      const sendButton=event.key===' '&&event.target===$('send-button');
+      if(!composer&&!sendButton&&event.target.closest('button,input,select,textarea,a,[contenteditable],#timeline-panel'))return;
+      if(event.repeat){if(event.key===' '&&spaceSendHeld)event.preventDefault();return;}
+      if(!canSendMessage())return;
+      event.preventDefault();sendMessage();
+      if(event.key===' '){spaceSendHeld=true;spaceRepeatTimer=setTimeout(repeatSpaceSend,500);}
+    }
+    function stopSpaceRepeat() {
+      clearTimeout(spaceRepeatTimer);spaceRepeatTimer=null;spaceSendHeld=false;
+    }
+    function repeatSpaceSend() {
+      spaceRepeatTimer=null;
+      if(!spaceSendHeld||!playing||document.hidden||pendingChatId||messageMenuContext||document.querySelector('dialog[open]')||
+        !isChatVisible(engine?.activeChatId)||engine?.finished||engine?.current()?.type==='choice'){
+        stopSpaceRepeat();return;
+      }
+      if(sendLocked){clearTimer();pump();}
+      sendMessage();
+      if(spaceSendHeld)spaceRepeatTimer=setTimeout(repeatSpaceSend,160);
     }
     function loadStory(raw) {
-      const next=validateStory(raw);timelineModel=null;timelineViewportKey='';timelineFollow=true;clearTimer();playing=false;resumeOnVisible=false;story=next;engine=new PlaybackEngine(story);viewedChatId=null;followActive=true;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;headerAvatarKey='';historyScrolls.clear();resetNavigation();viewedChatId=previewChat()?.id||null;
+      const next=validateStory(raw);timelineModel=null;timelineViewportKey='';timelineFollow=true;clearTimer();playing=false;resumeOnVisible=false;story=next;engine=new PlaybackEngine(story);viewedChatId=null;newestMessageId=null;renderedChatId=null;renderedMessageCount=0;headerAvatarKey='';historyScrolls.clear();resetNavigation();viewedChatId=previewChat()?.id||null;
       $('error').hidden=true;document.title=`${story.story.title} — Chat Story Player`;play();
     }
     function showError(error) { $('error').textContent=error.message || 'Could not open story.';$('error').hidden=false;openControls(); }
@@ -1080,38 +2261,7 @@
       try { if(file.size>MAX_FILE_SIZE)throw new Error('Choose a story smaller than 50 MiB.');const text=await file.text();if(generation!==readGeneration)return;let raw;try{raw=JSON.parse(text);}catch(_){throw new Error('This file is not valid JSON.');}loadStory(raw); }
       catch(error){if(generation===readGeneration)showError(error);}
     }
-    function exampleStory() {
-      const data={format:'chat-story-player',version:1,story:{id:'movie-night',title:'The movie-night plan'},characters:['User','Sarah','Max'].map(name=>({id:name.toLowerCase(),name,avatar:null})),chats:[
-        {id:'sarah',title:'',participantIds:['user','sarah'],ownerId:'user',settings:{}},
-        {id:'max',title:'',participantIds:['user','max'],ownerId:'user',settings:{}},
-        {id:'friends',title:'',participantIds:['sarah','max'],ownerId:'sarah',settings:{theme:'green'}},
-        {id:'group',title:'Movie night',participantIds:['user','sarah','max'],ownerId:'user',settings:{darkMode:true,battery:62}}
-      ],startNodeId:'step-0',nodes:[]};
-      const records=[['chat','sarah'],['message','sarah','timestamp',null,'Friday, 4:30 PM'],['message','sarah','text','sarah','Still up for a movie tonight?'],['message','sarah','text','user',"Definitely! Let me check with Max."],['chat','max'],['message','max','text','user','Movie night with Sarah?'],['message','max','text','max',"Count me in. I'll bring snacks."],['chat','friends'],['message','friends','text','max',"Does User know we're getting popcorn first?"],['message','friends','text','sarah',"Not yet. Let's put it in the group."],['chat','group'],['message','group','text','max','Snacks before the movie?'],['message','group','text','sarah','Only if there is popcorn!'],['message','group','image-placeholder','user','A cinema with a café next door'],['message','group','text','user','Found the perfect place. See you at 6:30!'],['chat','sarah'],['message','sarah','text','sarah',"Tickets are booked. This is going to be fun."],['end']];
-      data.nodes=records.map((record,index)=>{const node={id:`step-${index}`,type:record[0]};if(node.type==='end')return node;node.chatId=record[1];node.next=`step-${index+1}`;if(node.type==='message')node.message={id:`message-${index}`,type:record[2],sender:record[3],content:record[4],altText:''};return node;});
-      return data;
-    }
-    function branchingExampleStory() {
-      const data=exampleStory();data.version=2;data.story={id:'evening-invitation',title:'The invitation'};data.chats=data.chats.filter(chat=>['sarah','friends'].includes(chat.id));data.startNodeId='demo-intro';
-      const message=(id,chatId,sender,content,next)=>({id,type:'message',chatId,message:{id:`message:${id}`,type:'text',sender,content,altText:''},next});
-      data.nodes=[
-        {id:'demo-intro',type:'chat',chatId:'sarah',next:'demo-question'},
-        message('demo-question','sarah','sarah','Can you meet me tonight?','demo-invitation'),
-        {id:'demo-invitation',type:'choice',chatId:'sarah',options:[
-          {id:'meet',text:'Yes. Where?',next:'demo-yes-reply'},
-          {id:'stay-home',text:"Sorry, I can't.",next:'demo-no-reply'}]},
-        message('demo-yes-reply','sarah','user','Yes. Where?','demo-meet'),
-        {id:'demo-meet',type:'chat',chatId:'sarah',next:'demo-meet-reaction',status:{time:'18:00',battery:85}},
-        message('demo-meet-reaction','sarah','sarah',"At the station. Eight o'clock.",'demo-joined'),
-        message('demo-no-reply','sarah','user',"Sorry, I can't.",'demo-home'),
-        {id:'demo-home',type:'chat',chatId:'sarah',next:'demo-home-reaction',status:{time:'18:30',battery:80}},
-        message('demo-home-reaction','sarah','sarah','Okay. Keep your phone nearby.','demo-joined'),
-        {id:'demo-joined',type:'chat',chatId:'friends',next:'demo-max'},
-        message('demo-max','friends','max','Did you hear back from User?','demo-sarah'),
-        message('demo-sarah','friends','sarah',"Yes. I'll send you the details.",'demo-end'),
-        {id:'demo-end',type:'end'}
-      ];return data;
-    }
+    function exampleStory() { return JSON.parse($('example-story').textContent); }
     setupDragScrolling();
     $('controls-toggle').addEventListener('click',openControls);
     $('controls-close').addEventListener('click',closeControls);
@@ -1157,18 +2307,45 @@
     for(const id of ['open-button','phone-open-button'])$(id).addEventListener('click',()=>$('story-file').click());
     $('story-file').addEventListener('change',event=>{openFile(event.target.files?.[0]);event.target.value='';});
     for(const id of ['example-button','phone-example-button'])$(id).addEventListener('click',()=>{readGeneration++;loadStory(exampleStory());});
-    for(const id of ['branching-example-button','phone-branching-example-button'])$(id).addEventListener('click',()=>{readGeneration++;loadStory(branchingExampleStory());});
     $('playback-paused').addEventListener('change',event=>{resumeOnVisible=false;if(event.target.checked)pause();else play({closePanel:false});});
-    $('phone-play-button').addEventListener('click',event=>{if(event.detail>1)return;if(playing&&(pendingChatId||ownerWaiting||engine.current()?.type==='choice'))openChat(pendingChatId||engine.activeChatId);else play();});
+    $('phone-play-button').addEventListener('click',event=>{if(event.detail<=1)play();});
     $('chat-back').addEventListener('click',showChatOverview);
     $('show-chats-button').addEventListener('click',showChatOverview);
     $('overview-current').addEventListener('click',()=>openChat(engine?.activeChatId||viewedChatId));
     $('chat-notification').addEventListener('click',()=>openChat(pendingChatId));
     $('restart-button').addEventListener('click',restart);
+    $('chat-messages').addEventListener('contextmenu',event=>{
+      const anchor=event.target.closest('[data-story-node]');if(!anchor)return;
+      event.preventDefault();openMessageMenu(anchor,event.clientX,event.clientY);
+    });
+    $('chat-messages').addEventListener('keydown',event=>{
+      if(event.key!=='ContextMenu'&&!(event.key==='F10'&&event.shiftKey))return;
+      const anchor=event.target.closest('[data-story-node]');if(!anchor)return;
+      event.preventDefault();const rect=anchor.getBoundingClientRect();openMessageMenu(anchor,rect.left+24,rect.bottom);
+    });
+    $('message-jump').addEventListener('click',()=>{
+      const context=messageMenuContext;if(!context)return;
+      closeMessageMenu({restoreFocus:false,resume:false});
+      if(context.story===story)seekStory(context.nodeId,{resume:context.resumeOnJump});
+    });
+    $('message-menu').addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeMessageMenu();}
+      else if(event.key==='Tab')closeMessageMenu();
+      else if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();$('message-jump').focus();}
+    });
+    document.addEventListener('pointerdown',event=>{if(messageMenuContext&&!event.target.closest('#message-menu'))closeMessageMenu({restoreFocus:false});},true);
+    document.addEventListener('scroll',()=>closeMessageMenu({restoreFocus:false}),true);
+    window.addEventListener('resize',()=>closeMessageMenu({restoreFocus:false}));
+    window.addEventListener('blur',()=>{stopSpaceRepeat();closeMessageMenu({restoreFocus:false});});
     $('send-button').addEventListener('click',event=>{if(event.detail<=1)sendMessage();});
-    $('scripted-message').addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.repeat){event.preventDefault();sendMessage();}});
-    document.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.defaultPrevented&&!event.repeat&&!event.altKey&&!event.ctrlKey&&!event.metaKey&&!document.querySelector('dialog[open]')&&!event.target.closest('button,input,select,textarea,a,#timeline-panel')){event.preventDefault();sendMessage();}});
-    $('speed').addEventListener('change',()=>{if(playing){clearTimer();pump();}});
+    $('send-button').addEventListener('keydown',event=>{if(event.repeat&&['Enter',' '].includes(event.key))event.preventDefault();});
+    document.addEventListener('keydown',handleSendShortcut);
+    document.addEventListener('keyup',event=>{if(event.key===' '){if(spaceSendHeld)event.preventDefault();stopSpaceRepeat();}});
+    document.addEventListener('focusin',stopSpaceRepeat);
+    $('phone-speed').addEventListener('click',()=>{
+      const speed=$('speed');speed.selectedIndex=(speed.selectedIndex+1)%speed.options.length;speed.dispatchEvent(new Event('change'));
+    });
+    $('speed').addEventListener('change',()=>{if(playing){clearTimer();pump();}else render();});
     document.addEventListener('visibilitychange',()=>{
       if(document.hidden)stopScrollPan();
       if(document.hidden&&playing){resumeOnVisible=true;pause();}

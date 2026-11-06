@@ -1,0 +1,141 @@
+[Scene: invitation]
+
+[Chat: User / Sarah]
+[Phone owner: User]
+Time: Friday, 4:30 PM
+Sarah: Still up for a movie tonight?
+User: Definitely! I'll check with Max.
+Sarah: Meet at the station.
+  I'll bring the tickets.
+
+[Chat: User / Max]
+[Phone owner: User]
+User: Movie night with Sarah?
+Max: Yes! I'll ask Alex too.
+User: Let's book four seats, then.
+
+[Chat: Sarah / Max]
+[Phone owner: Sarah]
+Sarah: Does User know we're getting snacks first?
+Max: Not yet. I'll suggest it in the group.
+Sarah: Good plan!
+
+[Chat: User / Sarah / Max]
+[Phone owner: User]
+Time: Friday, 4:40 PM
+Max: Snacks before the movie?
+Sarah: Only if there's popcorn!
+User: I found a cinema with a café next door.
+User: [img:A cinema entrance with a café next door]
+
+[Chat: User / Sarah]
+[Phone owner: User]
+User: Alex is joining too.
+Sarah: Great! Put the meeting details in the new group.
+
+[Chat: User / Sarah / Max / Alex]
+[Phone owner: User]
+Time: Friday, 4:45 PM
+Alex: Thanks for the invite! Where are we meeting?
+User: Tonight's plan:
+  6:30 PM - meet at the station
+  7:00 PM - movie starts
+Sarah: I'll bring the tickets.
+Max: And I'll handle the snacks.
+Alex: See you there!
+
+[Chat: User / "Cinema / Tickets"]
+[Phone owner: User]
+User: Could you send my ticket?
+"Cinema / Tickets": [img:data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTUwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE2IiBmaWxsPSIjMTcyNTU0Ii8+PHRleHQgeD0iMjQiIHk9IjU1IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiPk1PVklFIE5JR0hUPC90ZXh0Pjx0ZXh0IHg9IjI0IiB5PSIxMDAiIGZpbGw9IiM5M2M1ZmQiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4Ij5GUklEQVkgLyA3IFBNIC8gU0VBVCBBNDwvdGV4dD48L3N2Zz4=|alt:Movie ticket for Friday at 7 PM]
+
+[Chat: User / Sarah / Max / Alex]
+[Phone owner: User]
+Max: \[img:This one is a text message]
+Alex: The tickets are ready. Meeting in person or joining us from home?
+
+[Choice]
+"I'll meet you at the station." -> at_station
+"I'll join from home tonight." -> stay_home
+[End choice]
+
+[Scene: at_station]
+
+[Chat: User / Sarah]
+[Phone owner: User]
+Time: Friday, 6:30 PM
+Sarah: I'm outside the station.
+  Look for the blue umbrella.
+Sarah: Popcorn or nachos?
+
+[Choice]
+"Popcorn, please!" -> popcorn
+"Nachos for me." -> nachos
+[End choice]
+
+[Scene: stay_home]
+
+[Chat: User / Max]
+[Phone owner: User]
+Max: No worries. We'll send you updates.
+User: [img:My sofa, a blanket, and a bowl of snacks]
+Max: Let's start at the same time.
+
+[Go to: movie]
+
+[Scene: popcorn]
+
+[Chat: User / Sarah / Max]
+[Phone owner: User]
+Max: Popcorn secured!
+Sarah: Sweet and salty. Good choice.
+
+[Go to: movie]
+
+[Scene: nachos]
+
+[Chat: User / Sarah / Max]
+[Phone owner: User]
+Max: Nachos secured!
+Sarah: Extra cheese, of course.
+
+[Go to: movie]
+
+[Scene: movie]
+
+[Chat: Sarah / Max]
+[Phone owner: Sarah]
+Max: Did User pick a plan?
+Sarah: Yes. Everyone's ready.
+
+[Chat: User / Sarah / Max / Alex]
+[Phone owner: User]
+Time: Friday, 7:00 PM
+Alex: Starting now!
+Max: Anyone staying for a chat afterward?
+
+[Choice]
+"Let's keep chatting at the café." -> cafe
+"I'll call it a night. Have fun!" -> goodnight
+[End choice]
+
+[Scene: cafe]
+
+[Chat: User / Sarah / Max / Alex]
+[Phone owner: User]
+Time: Friday, 9:15 PM
+Sarah: The café is open. We can call anyone who is at home.
+Alex: Best movie night in ages!
+
+[End]
+
+[Scene: goodnight]
+
+[Chat: User / Sarah]
+[Phone owner: User]
+Time: Later that night
+Sarah: Thanks for joining us, wherever you watched from.
+User: Same time next week?
+Sarah: Absolutely. Goodnight!
+
+[End]

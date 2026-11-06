@@ -1,5 +1,7 @@
 """Browser regression checks for scene authoring and branching playback."""
+import json
 import unittest
+from pathlib import Path
 
 import test_generator_export as generator_checks
 import test_player_timeline as player_checks
@@ -33,7 +35,7 @@ Sarah: MERGED_END: Text me when you're home.
 
 
 PLAYER_STORY = """() => {
-    const raw=exampleStory();raw.version=2;raw.startNodeId='intro';
+    const raw=linearExampleStory();raw.version=2;raw.startNodeId='intro';
     const message=(id,sender,content,next)=>({id,type:'message',chatId:'sarah',
         message:{id:'m-'+id,type:'text',sender,content,altText:''},next});
     raw.nodes=[
@@ -96,14 +98,61 @@ class BranchingGeneratorTests(unittest.TestCase):
         self.assertEqual(self.page.evaluate("storyFlow.scenes[0].exit.options.map(option=>option.text)"),
                          ['Yes. Where?', "Sorry, I can't."])
 
-    def test_branching_example_loads_from_its_own_button(self):
-        self.page.locator('#load-branching-example').click()
+    def test_combined_example_loads_from_its_button(self):
+        self.page.locator('#load-example').click()
         self.page.wait_for_function("!!storyFlow && !projectOperationPending")
         self.assertEqual(self.page.evaluate('previewMode'), 'story')
         self.assertTrue(self.page.locator('#preview-path-controls').is_visible())
         self.assertGreaterEqual(self.page.locator('[data-preview-choice]').count(), 1)
         self.assertIn('[Choice]', self.page.locator('#script-input').input_value())
         self.assertEqual(self.page.evaluate("buildPlayableStory(validateBackup(projectBackup()),currentProjectId).version"), 2)
+
+    def test_combined_example_matches_downloads_and_player_and_covers_all_syntax(self):
+        result = self.page.evaluate("""() => {
+            applyProjectSnapshot(validateBackup(exampleProjectSnapshot()));populateScriptFromMessages();
+            let script=document.getElementById('script-input').value;
+            for(const chat of conversations)for(const [key,source] of chat.imageCache)script=script.replaceAll(key,source);
+            return {script,story:buildPlayableStory(validateBackup(projectBackup()),'movie-night'),
+                sizes:conversations.map(chat=>chat.participantIds.length),
+                owners:conversations.map(chat=>characterName(chat.ownerId)),names:characters.map(character=>character.name),
+                types:[...new Set(conversations.flatMap(chat=>chat.messages.map(message=>message.type)))],
+                multiline:conversations.some(chat=>chat.messages.some(message=>message.type==='text'&&message.content.includes('\\n'))),
+                literal:conversations.some(chat=>chat.messages.some(message=>message.type==='text'&&message.content.startsWith('[img:')))};
+        }""")
+        examples = Path(__file__).resolve().parents[1] / 'examples'
+        self.assertEqual(result['script'], (examples / 'movie-night.txt').read_text(encoding='utf-8').strip())
+        self.assertEqual(result['story'], json.loads((examples / 'movie-night.chatstory.json').read_text(encoding='utf-8')))
+        self.assertEqual(set(result['sizes']), {2, 3, 4})
+        self.assertEqual(set(result['owners']), {'User', 'Sarah'})
+        self.assertIn('Cinema / Tickets', result['names'])
+        self.assertEqual(set(result['types']), {'text', 'timestamp', 'image', 'image-placeholder'})
+        self.assertTrue(result['multiline'])
+        self.assertTrue(result['literal'])
+        self.assertIn('"Cinema / Tickets"', result['script'])
+        self.assertEqual(result['script'].count('[Choice]'), 3)
+        self.assertEqual(result['script'].count('[End]'), 2)
+        self.assertIn('[Go to: movie]', result['script'])
+        player = self.context.new_page()
+        player.on('pageerror', lambda error: self.errors.append(str(error)))
+        player.goto(player_checks.PLAYER)
+        self.assertEqual(player.evaluate('exampleStory()'), result['story'])
+        routes = player.evaluate("""() => {
+            const graph=validateStory(exampleStory()),pending=[graph.startNodeId];let endings=0;
+            while(pending.length){const node=graph.nodes.get(pending.pop());
+                if(node.type==='end')endings++;else pending.push(...storyNodeTargets(node));}
+            return endings;
+        }""")
+        self.assertEqual(routes, 6)
+        player.evaluate("""() => {
+            loadStory(exampleStory());pause();
+            const ticket=[...story.nodes.values()].find(node=>node.type==='message'&&node.message.type==='image');
+            seekStory(ticket.id);
+        }""")
+        player.wait_for_function("document.querySelector('#chat-messages .chat-image')?.naturalWidth===300")
+        self.page.evaluate("applyProjectSnapshot(validateBackup(blankProjectSnapshot()))")
+        self.apply_script(result['script'])
+        self.assertEqual(self.page.evaluate("storyFlow.scenes.filter(scene=>scene.exit.type==='choice').length"), 3)
+        self.assertTrue(self.page.evaluate("conversations.some(chat=>chat.messages.some(message=>message.type==='image'&&message.content.startsWith('data:image/')))"))
 
     def test_branch_backup_selected_path_and_undo_restore_flow(self):
         self.apply_script()
@@ -329,6 +378,23 @@ class BranchingPlayerTests(unittest.TestCase):
     def load_branching(self):
         self.page.evaluate(f"() => {{loadStory(({PLAYER_STORY})());pause();}}")
 
+    def test_holding_space_stops_at_choice_without_selecting_or_sending(self):
+        self.page.clock.install()
+        self.page.clock.pause_at(self.page.evaluate('Date.now()'))
+        self.load_branching()
+        self.page.evaluate("seekStory('intro');play()")
+        self.page.locator('#scripted-message').focus()
+        self.page.keyboard.down('Space')
+        self.page.clock.run_for(1000)
+        self.assertEqual(self.page.evaluate('engine.current().id'), 'first-choice')
+        self.assertEqual(self.page.evaluate('engine.messageCount'), 1)
+        self.assertEqual(self.page.evaluate('engine.decisions.size'), 0)
+        self.assertTrue(self.page.evaluate('!spaceSendHeld&&spaceRepeatTimer===null'))
+        self.page.keyboard.up('Space')
+        self.page.locator('[data-choice-option="yes"]').click()
+        self.page.clock.run_for(1000)
+        self.assertEqual(self.page.evaluate('engine.messageCount'), 1)
+
     def test_choice_prepares_reply_and_send_commits_once(self):
         self.load_branching()
         self.page.evaluate("seekStory('first-choice');play()")
@@ -348,9 +414,102 @@ class BranchingPlayerTests(unittest.TestCase):
         self.assertEqual(result['visited'].count('no-reply'), 1)
         self.assertNotIn('yes-reply', result['visited'])
 
-    def test_branching_demo_opens_at_a_working_reply_choice(self):
-        self.page.locator('#phone-branching-example-button').click()
-        self.page.evaluate("pause();seekStory('demo-invitation');play()")
+    def test_fast_has_a_much_shorter_typing_delay_and_send_pause(self):
+        timings = self.page.evaluate("""() => {
+            const original=schedule;window.delays=[];schedule=(delay,callback)=>{delays.push(delay);original(delay,callback);};
+            const raw=linearExampleStory();raw.startNodeId='incoming';raw.nodes=[
+                {id:'incoming',type:'message',chatId:'sarah',message:{id:'m-incoming',type:'text',sender:'sarah',content:'Are you coming tonight?'},next:'end'},
+                {id:'end',type:'end'}];
+            $('speed').value='1';loadStory(raw);const normal=delays.at(-1);
+            $('speed').value='2';loadStory(raw);const fast=delays.at(-1);
+            const typing=typingSender==='Sarah'&&engine.messageCount===0;
+            pause();raw.nodes[0].message.sender='user';loadStory(raw);sendMessage();
+            const sendPause=delays.at(-1);pause();return {normal,fast,typing,sendPause};
+        }""")
+        self.assertLess(timings['fast'], timings['normal'] * .3)
+        self.assertGreaterEqual(timings['fast'], 100)
+        self.assertTrue(timings['typing'])
+        self.assertLessEqual(timings['sendPause'], 120)
+
+    def test_very_fast_mode_waits_only_at_choices_and_sends_selected_replies(self):
+        self.load_branching()
+        self.page.evaluate("$('speed').value='very-fast';play()")
+        self.assertEqual(self.page.evaluate('engine.messageCount'), 0)
+        self.page.wait_for_function("engine.current()?.id==='first-choice'")
+        self.assertEqual(self.page.evaluate('engine.messageCount'), 1)
+        self.assertTrue(self.page.locator('#reply-options').is_visible())
+        self.assertEqual(self.page.evaluate('pendingChatId'), None)
+        self.page.locator('[data-choice-option="no"]').focus()
+        self.page.keyboard.down('Enter')
+        self.page.wait_for_function("engine.current()?.id==='second-choice'")
+        self.page.keyboard.down('Enter')
+        self.page.keyboard.up('Enter')
+        self.assertEqual(self.page.evaluate('engine.current().id'), 'second-choice')
+        self.assertEqual(self.page.evaluate("engine.histories.get('sarah').map(message=>message.content)"),
+                         ['Are you coming?', "Sorry, I can't.", 'STAY_ONLY'])
+        self.assertEqual(self.page.locator('#clock').text_content(), '12:00')
+        self.page.locator('[data-choice-option="wait"]').dispatch_event('click', {'detail': 2})
+        self.assertEqual(self.page.evaluate('engine.current().id'), 'second-choice')
+        self.assertFalse(self.page.evaluate("engine.decisions.has('second-choice')"))
+        self.page.locator('[data-choice-option="wait"]').click()
+        self.page.wait_for_function('engine.finished&&!playing')
+        self.assertEqual(self.page.evaluate("engine.histories.get('sarah').map(message=>message.content)"),
+                         ['Are you coming?', "Sorry, I can't.", 'STAY_ONLY', 'Wait a moment.', 'MERGED_END'])
+        self.assertTrue(self.page.locator('#phone-play-button').is_visible())
+
+    def test_very_fast_mode_clears_chat_prompts_and_plays_both_sides_automatically(self):
+        for sender, pending_kind in [('sarah', 'reply'), ('max', 'incoming')]:
+            with self.subTest(pending_kind=pending_kind):
+                self.page.evaluate("""sender => {
+                    closeControls();$('speed').value='1';
+                    const raw=linearExampleStory();raw.startNodeId='opening';
+                    raw.nodes=[{id:'opening',type:'message',chatId:'sarah',
+                        message:{id:'opening',type:'text',sender:'user',content:'Hello!'},next:'switch'},
+                        {id:'switch',type:'chat',chatId:'friends',next:'reply'},
+                        {id:'reply',type:'message',chatId:'friends',message:{id:'reply',type:'text',sender,content:'Tickets are ready.'},next:'end'},
+                        {id:'end',type:'end'}];
+                    const originalSchedule=schedule;schedule=(delay,callback)=>originalSchedule(Math.min(delay,20),callback);
+                    loadStory(raw);
+                }""", sender)
+                self.page.locator('#send-button').click()
+                self.page.wait_for_function("pendingChatId==='friends'")
+                self.assertEqual(self.page.evaluate('pendingChatKind'), pending_kind)
+                self.page.locator('#controls-toggle').click()
+                self.page.locator('#speed').select_option('very-fast')
+                self.page.evaluate('closeControls()')
+                self.page.wait_for_function('engine.finished&&!playing')
+                self.assertTrue(self.page.evaluate("engine.finished&&!playing&&pendingChatId===null&&unreadCounts.size===0&&viewedChatId==='friends'"))
+                self.assertEqual(self.page.evaluate("engine.histories.get('friends').map(message=>message.content)"), ['Tickets are ready.'])
+
+    def test_very_fast_pacing_can_be_paused_and_resumed_without_duplicate_messages(self):
+        self.page.evaluate("""() => {
+            const raw=linearExampleStory();raw.startNodeId='run-0';raw.nodes=Array.from({length:12},(_,index)=>({
+                id:'run-'+index,type:'message',chatId:'sarah',message:{id:'m-'+index,type:'text',sender:'user',content:'Message '+index},
+                next:index===11?null:'run-'+(index+1)}));
+            $('speed').value='very-fast';loadStory(raw);
+        }""")
+        self.assertEqual(self.page.evaluate('engine.messageCount'), 0)
+        self.page.wait_for_function('engine.messageCount>=2')
+        self.page.evaluate('pause()')
+        paused_count = self.page.evaluate('engine.messageCount')
+        self.assertGreater(paused_count, 0)
+        self.assertLess(paused_count, 12)
+        self.page.wait_for_timeout(250)
+        self.assertEqual(self.page.evaluate('engine.messageCount'), paused_count)
+        self.assertTrue(self.page.evaluate('!playing&&timer===null'))
+        self.page.evaluate("$('speed').value='2';play()")
+        self.assertEqual(self.page.evaluate('engine.messageCount'), paused_count)
+        self.assertTrue(self.page.evaluate('ownerWaiting'))
+        self.page.evaluate("$('speed').value='very-fast';$('speed').dispatchEvent(new Event('change'))")
+        self.page.wait_for_function('engine.finished')
+        result = self.page.evaluate("""() => ({count:engine.messageCount,
+            unique:new Set(engine.histories.get('sarah').map(message=>message.id)).size,
+            history:engine.histories.get('sarah').length,playing})""")
+        self.assertEqual(result, {'count': 12, 'unique': 12, 'history': 12, 'playing': False})
+
+    def test_combined_demo_opens_at_a_working_reply_choice(self):
+        self.page.locator('#phone-example-button').click()
+        self.page.evaluate("pause();seekStory('choice:invitation');play()")
         self.assertEqual(self.page.evaluate('story.version'), 2)
         self.assertEqual(self.page.locator('#reply-options [data-choice-option]').count(), 2)
         self.assertTrue(self.page.locator('#reply-options').is_visible())
@@ -380,6 +539,40 @@ class BranchingPlayerTests(unittest.TestCase):
         self.assertEqual(self.page.evaluate('pendingChatId'), None)
         self.assertEqual(self.page.locator('#phone-role').text_content(), 'As Sarah')
         self.assertIn('STAY_ONLY', self.page.locator('#chat-messages').text_content())
+
+    def test_choice_in_another_chat_prompts_without_switching_or_selecting_a_reply(self):
+        self.page.evaluate("""() => {
+            const raw=linearExampleStory();raw.version=2;raw.startNodeId='opening';
+            const message=(id,chatId,sender,content,next)=>({id,type:'message',chatId,
+                message:{id:'m-'+id,type:'text',sender,content},next});
+            raw.nodes=[message('opening','sarah','user','See you soon.','switch'),
+                {id:'switch',type:'chat',chatId:'friends',next:'new-choice'},
+                {id:'new-choice',type:'choice',chatId:'friends',options:[
+                    {id:'yes',text:'I have the tickets.',next:'yes-reply'},
+                    {id:'no',text:'Can you bring the tickets?',next:'no-reply'}]},
+                message('yes-reply','friends','sarah','I have the tickets.','end'),
+                message('no-reply','friends','sarah','Can you bring the tickets?','end'),{id:'end',type:'end'}];
+            const originalSchedule=schedule;schedule=(delay,callback)=>originalSchedule(Math.min(delay,20),callback);
+            loadStory(raw);
+        }""")
+        self.page.locator('#send-button').click()
+        self.page.wait_for_function("pendingChatId==='friends'")
+        self.assertEqual(self.page.evaluate('viewedChatId'), 'sarah')
+        self.assertEqual(self.page.evaluate('pendingChatKind'), 'reply')
+        self.assertEqual(self.page.evaluate('engine.decisions.size'), 0)
+        self.assertEqual(self.page.evaluate('unreadCounts.size'), 0)
+        self.assertTrue(self.page.locator('#reply-options').is_hidden())
+        self.assertTrue(self.page.locator('#phone-play-button').is_hidden())
+        self.assertEqual(self.page.locator('#notification-owner').text_content(), 'As Sarah')
+        self.assertFalse(self.page.evaluate("chooseStoryOption('yes')"))
+        self.page.locator('#chat-notification').click()
+        self.assertTrue(self.page.locator('#reply-options').is_visible())
+        self.assertEqual(self.page.locator('#phone-role').text_content(), 'As Sarah')
+        self.assertTrue(self.page.locator('#send-button').is_disabled())
+        self.page.locator('[data-choice-option="yes"]').click()
+        self.page.locator('#send-button').click()
+        self.page.evaluate('pause()')
+        self.assertEqual(self.page.evaluate("engine.histories.get('friends').map(message=>message.content)"), ['I have the tickets.'])
 
     def test_alternatives_merge_without_history_leaks_and_seek_reopens_choices(self):
         self.load_branching()
@@ -429,6 +622,25 @@ class BranchingPlayerTests(unittest.TestCase):
         self.assertIn('MEET_ONLY', result['history'])
         self.assertNotIn('Keep going.', result['history'])
         self.assertNotIn('MERGED_END', result['history'])
+
+    def test_message_jump_reopens_prior_choice_and_discards_later_branch_history(self):
+        self.load_branching()
+        self.page.evaluate("""() => {
+            engine.seekTo('first-choice');engine.choose('no');engine.advance();engine.advance();
+            while(engine.current().type!=='choice')engine.advance();
+            engine.choose('wait');engine.advance();engine.advance();
+            while(!engine.finished)engine.advance();
+            viewedChatId='sarah';renderedChatId=null;render();
+        }""")
+        self.page.locator('[data-story-node="question"] .bubble').click(button='right')
+        self.page.keyboard.press('Space')
+        self.assertTrue(self.page.locator('#message-menu').is_hidden())
+        self.assertEqual(self.page.evaluate('engine.current().id'), 'first-choice')
+        self.assertEqual(self.page.evaluate('engine.decisions.size'), 0)
+        self.assertEqual(self.page.evaluate("engine.histories.get('sarah').map(message=>message.content)"), ['Are you coming?'])
+        self.assertEqual(self.page.locator('#clock').text_content(), '9:00')
+        self.assertEqual(self.page.evaluate('pendingChatId'), None)
+        self.assertTrue(self.page.locator('#reply-options').is_visible())
 
     def test_timeline_contains_forks_and_merges_but_unplayed_nodes_cannot_seek(self):
         self.load_branching()

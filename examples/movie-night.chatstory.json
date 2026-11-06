@@ -1,0 +1,1066 @@
+{
+  "format": "chat-story-player",
+  "version": 2,
+  "story": {
+    "id": "movie-night",
+    "title": "Movie night"
+  },
+  "characters": [
+    {
+      "id": "character_user",
+      "name": "User",
+      "avatar": null
+    },
+    {
+      "id": "character_sarah",
+      "name": "Sarah",
+      "avatar": null
+    },
+    {
+      "id": "character_max",
+      "name": "Max",
+      "avatar": null
+    },
+    {
+      "id": "character_alex",
+      "name": "Alex",
+      "avatar": null
+    },
+    {
+      "id": "character_cinema",
+      "name": "Cinema / Tickets",
+      "avatar": null
+    }
+  ],
+  "chats": [
+    {
+      "id": "chat_user_sarah",
+      "title": "Sarah",
+      "participantIds": [
+        "character_user",
+        "character_sarah"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_user_max",
+      "title": "Max",
+      "participantIds": [
+        "character_user",
+        "character_max"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_sarah_max",
+      "title": "Max",
+      "participantIds": [
+        "character_sarah",
+        "character_max"
+      ],
+      "ownerId": "character_sarah",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_movie_group",
+      "title": "Movie night",
+      "participantIds": [
+        "character_user",
+        "character_sarah",
+        "character_max"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": true,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_movie_group_alex",
+      "title": "Movie night + Alex",
+      "participantIds": [
+        "character_user",
+        "character_sarah",
+        "character_max",
+        "character_alex"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "blue",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    },
+    {
+      "id": "chat_tickets",
+      "title": "Tickets",
+      "participantIds": [
+        "character_user",
+        "character_cinema"
+      ],
+      "ownerId": "character_user",
+      "settings": {
+        "time": "16:30",
+        "battery": 100,
+        "signalStrength": 4,
+        "wifiStrength": 3,
+        "theme": "green",
+        "darkMode": false,
+        "screenWidth": 375,
+        "showAvatar": true,
+        "showFrame": false,
+        "cropImages": false,
+        "avatar": null
+      }
+    }
+  ],
+  "startNodeId": "chat:example_block_1",
+  "nodes": [
+    {
+      "id": "chat:example_block_1",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "next": "message:example_block_1:example_message_1"
+    },
+    {
+      "id": "message:example_block_1:example_message_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:30 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_2"
+    },
+    {
+      "id": "message:example_block_1:example_message_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Still up for a movie tonight?",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_3"
+    },
+    {
+      "id": "message:example_block_1:example_message_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_3",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Definitely! I'll check with Max.",
+        "altText": ""
+      },
+      "next": "message:example_block_1:example_message_4"
+    },
+    {
+      "id": "message:example_block_1:example_message_4",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_4",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Meet at the station.\nI'll bring the tickets.",
+        "altText": ""
+      },
+      "next": "chat:example_block_2"
+    },
+    {
+      "id": "chat:example_block_2",
+      "type": "chat",
+      "chatId": "chat_user_max",
+      "next": "message:example_block_2:example_message_5"
+    },
+    {
+      "id": "message:example_block_2:example_message_5",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_5",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Movie night with Sarah?",
+        "altText": ""
+      },
+      "next": "message:example_block_2:example_message_6"
+    },
+    {
+      "id": "message:example_block_2:example_message_6",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_6",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Yes! I'll ask Alex too.",
+        "altText": ""
+      },
+      "next": "message:example_block_2:example_message_7"
+    },
+    {
+      "id": "message:example_block_2:example_message_7",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_message_7",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Let's book four seats, then.",
+        "altText": ""
+      },
+      "next": "chat:example_block_3"
+    },
+    {
+      "id": "chat:example_block_3",
+      "type": "chat",
+      "chatId": "chat_sarah_max",
+      "next": "message:example_block_3:example_message_8"
+    },
+    {
+      "id": "message:example_block_3:example_message_8",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_8",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Does User know we're getting snacks first?",
+        "altText": ""
+      },
+      "next": "message:example_block_3:example_message_9"
+    },
+    {
+      "id": "message:example_block_3:example_message_9",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_9",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Not yet. I'll suggest it in the group.",
+        "altText": ""
+      },
+      "next": "message:example_block_3:example_message_10"
+    },
+    {
+      "id": "message:example_block_3:example_message_10",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_message_10",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Good plan!",
+        "altText": ""
+      },
+      "next": "chat:example_block_4"
+    },
+    {
+      "id": "chat:example_block_4",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_4:example_message_11"
+    },
+    {
+      "id": "message:example_block_4:example_message_11",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_11",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:40 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_12"
+    },
+    {
+      "id": "message:example_block_4:example_message_12",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_12",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Snacks before the movie?",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_13"
+    },
+    {
+      "id": "message:example_block_4:example_message_13",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_13",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Only if there's popcorn!",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_14"
+    },
+    {
+      "id": "message:example_block_4:example_message_14",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_14",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I found a cinema with a café next door.",
+        "altText": ""
+      },
+      "next": "message:example_block_4:example_message_15"
+    },
+    {
+      "id": "message:example_block_4:example_message_15",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_message_15",
+        "type": "image-placeholder",
+        "sender": "character_user",
+        "content": "A cinema entrance with a café next door",
+        "altText": "A cinema entrance with a café next door"
+      },
+      "next": "chat:example_block_5"
+    },
+    {
+      "id": "chat:example_block_5",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "next": "message:example_block_5:example_message_16"
+    },
+    {
+      "id": "message:example_block_5:example_message_16",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_16",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Alex is joining too.",
+        "altText": ""
+      },
+      "next": "message:example_block_5:example_message_17"
+    },
+    {
+      "id": "message:example_block_5:example_message_17",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_message_17",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Great! Put the meeting details in the new group.",
+        "altText": ""
+      },
+      "next": "chat:example_block_6"
+    },
+    {
+      "id": "chat:example_block_6",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "next": "message:example_block_6:example_message_18"
+    },
+    {
+      "id": "message:example_block_6:example_message_18",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_18",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 4:45 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_19"
+    },
+    {
+      "id": "message:example_block_6:example_message_19",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_19",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Thanks for the invite! Where are we meeting?",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_20"
+    },
+    {
+      "id": "message:example_block_6:example_message_20",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_20",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Tonight's plan:\n6:30 PM - meet at the station\n7:00 PM - movie starts",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_21"
+    },
+    {
+      "id": "message:example_block_6:example_message_21",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_21",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "I'll bring the tickets.",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_22"
+    },
+    {
+      "id": "message:example_block_6:example_message_22",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_22",
+        "type": "text",
+        "sender": "character_max",
+        "content": "And I'll handle the snacks.",
+        "altText": ""
+      },
+      "next": "message:example_block_6:example_message_23"
+    },
+    {
+      "id": "message:example_block_6:example_message_23",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_message_23",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "See you there!",
+        "altText": ""
+      },
+      "next": "chat:example_block_tickets"
+    },
+    {
+      "id": "chat:example_block_tickets",
+      "type": "chat",
+      "chatId": "chat_tickets",
+      "next": "message:example_block_tickets:example_tickets_1"
+    },
+    {
+      "id": "message:example_block_tickets:example_tickets_1",
+      "type": "message",
+      "chatId": "chat_tickets",
+      "message": {
+        "id": "example_tickets_1",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Could you send my ticket?",
+        "altText": ""
+      },
+      "next": "message:example_block_tickets:example_tickets_2"
+    },
+    {
+      "id": "message:example_block_tickets:example_tickets_2",
+      "type": "message",
+      "chatId": "chat_tickets",
+      "message": {
+        "id": "example_tickets_2",
+        "type": "image",
+        "sender": "character_cinema",
+        "content": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMTUwIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgcng9IjE2IiBmaWxsPSIjMTcyNTU0Ii8+PHRleHQgeD0iMjQiIHk9IjU1IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiPk1PVklFIE5JR0hUPC90ZXh0Pjx0ZXh0IHg9IjI0IiB5PSIxMDAiIGZpbGw9IiM5M2M1ZmQiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4Ij5GUklEQVkgLyA3IFBNIC8gU0VBVCBBNDwvdGV4dD48L3N2Zz4=",
+        "altText": "Movie ticket for Friday at 7 PM"
+      },
+      "next": "chat:example_block_invitation"
+    },
+    {
+      "id": "chat:example_block_invitation",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "next": "message:example_block_invitation:example_invitation_1"
+    },
+    {
+      "id": "message:example_block_invitation:example_invitation_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_invitation_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "[img:This one is a text message]",
+        "altText": ""
+      },
+      "next": "message:example_block_invitation:example_invitation_2"
+    },
+    {
+      "id": "message:example_block_invitation:example_invitation_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_invitation_2",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "The tickets are ready. Meeting in person or joining us from home?",
+        "altText": ""
+      },
+      "next": "choice:invitation"
+    },
+    {
+      "id": "chat:example_block_at_station",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "status": {
+        "time": "18:30",
+        "battery": 80,
+        "signalStrength": 3,
+        "wifiStrength": 0
+      },
+      "next": "message:example_block_at_station:example_at_station_1"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 6:30 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_at_station:example_at_station_2"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "I'm outside the station.\nLook for the blue umbrella.",
+        "altText": ""
+      },
+      "next": "message:example_block_at_station:example_at_station_3"
+    },
+    {
+      "id": "message:example_block_at_station:example_at_station_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_at_station_3",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Popcorn or nachos?",
+        "altText": ""
+      },
+      "next": "choice:at_station"
+    },
+    {
+      "id": "chat:example_block_stay_home",
+      "type": "chat",
+      "chatId": "chat_user_max",
+      "status": {
+        "time": "18:35",
+        "battery": 90,
+        "wifiStrength": 3
+      },
+      "next": "message:example_block_stay_home:example_stay_home_1"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_1",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "No worries. We'll send you updates.",
+        "altText": ""
+      },
+      "next": "message:example_block_stay_home:example_stay_home_2"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_2",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_2",
+        "type": "image-placeholder",
+        "sender": "character_user",
+        "content": "My sofa, a blanket, and a bowl of snacks",
+        "altText": "My sofa, a blanket, and a bowl of snacks"
+      },
+      "next": "message:example_block_stay_home:example_stay_home_3"
+    },
+    {
+      "id": "message:example_block_stay_home:example_stay_home_3",
+      "type": "message",
+      "chatId": "chat_user_max",
+      "message": {
+        "id": "example_stay_home_3",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Let's start at the same time.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_popcorn",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_popcorn:example_popcorn_1"
+    },
+    {
+      "id": "message:example_block_popcorn:example_popcorn_1",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_popcorn_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Popcorn secured!",
+        "altText": ""
+      },
+      "next": "message:example_block_popcorn:example_popcorn_2"
+    },
+    {
+      "id": "message:example_block_popcorn:example_popcorn_2",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_popcorn_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Sweet and salty. Good choice.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_nachos",
+      "type": "chat",
+      "chatId": "chat_movie_group",
+      "next": "message:example_block_nachos:example_nachos_1"
+    },
+    {
+      "id": "message:example_block_nachos:example_nachos_1",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_nachos_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Nachos secured!",
+        "altText": ""
+      },
+      "next": "message:example_block_nachos:example_nachos_2"
+    },
+    {
+      "id": "message:example_block_nachos:example_nachos_2",
+      "type": "message",
+      "chatId": "chat_movie_group",
+      "message": {
+        "id": "example_nachos_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Extra cheese, of course.",
+        "altText": ""
+      },
+      "next": "chat:example_block_catchup"
+    },
+    {
+      "id": "chat:example_block_catchup",
+      "type": "chat",
+      "chatId": "chat_sarah_max",
+      "next": "message:example_block_catchup:example_catchup_1"
+    },
+    {
+      "id": "message:example_block_catchup:example_catchup_1",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_catchup_1",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Did User pick a plan?",
+        "altText": ""
+      },
+      "next": "message:example_block_catchup:example_catchup_2"
+    },
+    {
+      "id": "message:example_block_catchup:example_catchup_2",
+      "type": "message",
+      "chatId": "chat_sarah_max",
+      "message": {
+        "id": "example_catchup_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Yes. Everyone's ready.",
+        "altText": ""
+      },
+      "next": "chat:example_block_movie"
+    },
+    {
+      "id": "chat:example_block_movie",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "status": {
+        "time": "19:00",
+        "battery": 65,
+        "signalStrength": 4,
+        "wifiStrength": 2
+      },
+      "next": "message:example_block_movie:example_movie_1"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 7:00 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_movie:example_movie_2"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_2",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Starting now!",
+        "altText": ""
+      },
+      "next": "message:example_block_movie:example_movie_3"
+    },
+    {
+      "id": "message:example_block_movie:example_movie_3",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_movie_3",
+        "type": "text",
+        "sender": "character_max",
+        "content": "Anyone staying for a chat afterward?",
+        "altText": ""
+      },
+      "next": "choice:movie"
+    },
+    {
+      "id": "chat:example_block_cafe",
+      "type": "chat",
+      "chatId": "chat_movie_group_alex",
+      "status": {
+        "time": "21:15",
+        "battery": 35
+      },
+      "next": "message:example_block_cafe:example_cafe_1"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_1",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Friday, 9:15 PM",
+        "altText": ""
+      },
+      "next": "message:example_block_cafe:example_cafe_2"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_2",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "The café is open. We can call anyone who is at home.",
+        "altText": ""
+      },
+      "next": "message:example_block_cafe:example_cafe_3"
+    },
+    {
+      "id": "message:example_block_cafe:example_cafe_3",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "example_cafe_3",
+        "type": "text",
+        "sender": "character_alex",
+        "content": "Best movie night in ages!",
+        "altText": ""
+      },
+      "next": "end"
+    },
+    {
+      "id": "chat:example_block_goodnight",
+      "type": "chat",
+      "chatId": "chat_user_sarah",
+      "status": {
+        "time": "21:30",
+        "battery": 30
+      },
+      "next": "message:example_block_goodnight:example_goodnight_1"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_1",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_1",
+        "type": "timestamp",
+        "sender": null,
+        "content": "Later that night",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_2"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_2",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_2",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Thanks for joining us, wherever you watched from.",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_3"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_3",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_3",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Same time next week?",
+        "altText": ""
+      },
+      "next": "message:example_block_goodnight:example_goodnight_4"
+    },
+    {
+      "id": "message:example_block_goodnight:example_goodnight_4",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "example_goodnight_4",
+        "type": "text",
+        "sender": "character_sarah",
+        "content": "Absolutely. Goodnight!",
+        "altText": ""
+      },
+      "next": "end"
+    },
+    {
+      "id": "end",
+      "type": "end"
+    },
+    {
+      "id": "reply:invitation:meet",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:invitation:meet",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll meet you at the station.",
+        "altText": ""
+      },
+      "next": "chat:example_block_at_station"
+    },
+    {
+      "id": "reply:invitation:stay-home",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:invitation:stay-home",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll join from home tonight.",
+        "altText": ""
+      },
+      "next": "chat:example_block_stay_home"
+    },
+    {
+      "id": "choice:invitation",
+      "type": "choice",
+      "chatId": "chat_movie_group_alex",
+      "options": [
+        {
+          "id": "meet",
+          "text": "I'll meet you at the station.",
+          "next": "reply:invitation:meet"
+        },
+        {
+          "id": "stay-home",
+          "text": "I'll join from home tonight.",
+          "next": "reply:invitation:stay-home"
+        }
+      ]
+    },
+    {
+      "id": "reply:at_station:popcorn",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "reply:at_station:popcorn",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Popcorn, please!",
+        "altText": ""
+      },
+      "next": "chat:example_block_popcorn"
+    },
+    {
+      "id": "reply:at_station:nachos",
+      "type": "message",
+      "chatId": "chat_user_sarah",
+      "message": {
+        "id": "reply:at_station:nachos",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Nachos for me.",
+        "altText": ""
+      },
+      "next": "chat:example_block_nachos"
+    },
+    {
+      "id": "choice:at_station",
+      "type": "choice",
+      "chatId": "chat_user_sarah",
+      "options": [
+        {
+          "id": "popcorn",
+          "text": "Popcorn, please!",
+          "next": "reply:at_station:popcorn"
+        },
+        {
+          "id": "nachos",
+          "text": "Nachos for me.",
+          "next": "reply:at_station:nachos"
+        }
+      ]
+    },
+    {
+      "id": "reply:movie:cafe",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:movie:cafe",
+        "type": "text",
+        "sender": "character_user",
+        "content": "Let's keep chatting at the café.",
+        "altText": ""
+      },
+      "next": "chat:example_block_cafe"
+    },
+    {
+      "id": "reply:movie:goodnight",
+      "type": "message",
+      "chatId": "chat_movie_group_alex",
+      "message": {
+        "id": "reply:movie:goodnight",
+        "type": "text",
+        "sender": "character_user",
+        "content": "I'll call it a night. Have fun!",
+        "altText": ""
+      },
+      "next": "chat:example_block_goodnight"
+    },
+    {
+      "id": "choice:movie",
+      "type": "choice",
+      "chatId": "chat_movie_group_alex",
+      "options": [
+        {
+          "id": "cafe",
+          "text": "Let's keep chatting at the café.",
+          "next": "reply:movie:cafe"
+        },
+        {
+          "id": "goodnight",
+          "text": "I'll call it a night. Have fun!",
+          "next": "reply:movie:goodnight"
+        }
+      ]
+    }
+  ]
+}
